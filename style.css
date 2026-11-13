@@ -29,7 +29,24 @@
   color: var(--text);
   font-size: 14px;
 }
+/* CORREÇÃO DE EXIBIÇÃO DOS PAINÉIS */
+.hidden,
+section.hidden,
+div.hidden,
+button.hidden {
+  display: none !important;
+}
 
+/* Evita que os painéis de autenticação e aplicativo apareçam juntos */
+#appSection.hidden,
+#authSection.hidden,
+#medicationPanel.hidden,
+#restockPanel.hidden,
+#registerPanel.hidden,
+#recoveryPanel.hidden,
+#passwordResetPanel.hidden {
+  display: none !important;
+}
 .medication-stock-display strong {
   color: #22c55e;
   font-weight: 900;
