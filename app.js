@@ -739,6 +739,7 @@ $("medicationForm").addEventListener("submit", async (event) => {
       duration_days: $("medicationDuration").value
         ? Number($("medicationDuration").value)
         : null,
+       prescribed_days: Number($("medicationDuration").value) || 0,
       instructions: $("medicationInstructions").value.trim(),
       status: "active"
     };
