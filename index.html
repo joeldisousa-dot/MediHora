@@ -195,6 +195,43 @@
         </div>
 
         <div id="medicationList" class="medication-list">
+          <!-- FORMULÁRIO DE REPOSIÇÃO DE ESTOQUE -->
+<section id="restockPanel" class="panel hidden">
+    <h3>📦 Adicionar estoque</h3>
+
+    <p id="restockMedicationName"></p>
+
+    <form id="restockForm">
+        <input
+            type="number"
+            id="restockQuantity"
+            min="0.01"
+            step="0.01"
+            placeholder="Quantidade que deseja adicionar"
+            required
+        >
+
+        <input
+            type="text"
+            id="restockNote"
+            placeholder="Observação (opcional)"
+        >
+
+        <div class="form-actions">
+            <button type="submit" id="saveRestockButton">
+                Salvar estoque
+            </button>
+
+            <button
+                type="button"
+                id="cancelRestockButton"
+                class="btn-secondary"
+            >
+                Cancelar
+            </button>
+        </div>
+    </form>
+</section>
           <div class="empty-state">Carregando medicamentos...</div>
         </div>
       </section>
