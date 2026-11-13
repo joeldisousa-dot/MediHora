@@ -1,82 +1,103 @@
-/* =========================================================
+
+/* ============================================================
    MEDIHORA
-   Interface: GitHub Pages
-   Banco de dados: Supabase
-   ========================================================= */
+   Aplicativo de organização de medicamentos
+   Supabase + GitHub Pages
+   ============================================================ */
 
 const SUPABASE_URL = "https://dtwfettaesywyczfyvpr.supabase.co";
 const SUPABASE_KEY = "sb_publishable_WsqtiIuq2h_4e1gtVGg8PQ_L4LW7px0";
+const APP_TIMEZONE = "America/Sao_Paulo";
 
 const supabaseClient = window.supabase.createClient(
   SUPABASE_URL,
-  SUPABASE_KEY
+  SUPABASE_KEY,
+  {
+    auth: {
+      flowType: "pkce",
+      detectSessionInUrl: true,
+      persistSession: true,
+      autoRefreshToken: true
+    }
+  }
 );
 
 let currentUser = null;
 let medications = [];
-let schedules = [];
-let todayLogs = [];
+let schedulesByMedication = {};
+let editingMedicationId = null;
+let restockMedicationId = null;
 let toastTimeout = null;
+let savingMedication = false;
+let savingRestock = false;
+let passwordRecoveryInProgress = false;
+let applicationLoading = false;
 
-/* ELEMENTOS */
+const $ = id => document.getElementById(id);
 
-const $ = (id) => document.getElementById(id);
+/* ============================================================
+   DATA, FORMATAÇÃO E MENSAGENS
+   ============================================================ */
 
-const authSection = $("authSection");
-const appSection = $("appSection");
-const logoutButton = $("logoutButton");
+function todayLocalDate() {
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: APP_TIMEZONE,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit"
+  }).formatToParts(new Date());
 
-const loginPanel = $("loginPanel");
-const registerPanel = $("registerPanel");
-const recoveryPanel = $("recoveryPanel");
+  const values = Object.fromEntries(
+    parts.map(part => [part.type, part.value])
+  );
 
-const medicationPanel = $("medicationPanel");
-const restockPanel = $("restockPanel");
-
-/* DATA E HORA */
-
-function todayString() {
-  const now = new Date();
-  const year = now.getFullYear();
-  const month = String(now.getMonth() + 1).padStart(2, "0");
-  const day = String(now.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
+  return `${values.year}-${values.month}-${values.day}`;
 }
 
-function dateTimeForSchedule(date, time) {
-  return `${date}T${time}:00-03:00`;
+function nextDate(dateString) {
+  const [year, month, day] = dateString.split("-").map(Number);
+  const date = new Date(Date.UTC(year, month - 1, day + 1));
+
+  return [
+    date.getUTCFullYear(),
+    String(date.getUTCMonth() + 1).padStart(2, "0"),
+    String(date.getUTCDate()).padStart(2, "0")
+  ].join("-");
+}
+
+function localDayBounds() {
+  const date = todayLocalDate();
+
+  return {
+    start: `${date}T00:00:00-03:00`,
+    end: `${nextDate(date)}T00:00:00-03:00`
+  };
+}
+
+function localScheduleTimestamp(dateString, timeString) {
+  return `${dateString}T${String(timeString).slice(0, 5)}:00-03:00`;
 }
 
 function formatDate(dateString) {
   if (!dateString) return "";
-  const parts = dateString.split("-");
-  if (parts.length !== 3) return dateString;
-  return `${parts[2]}/${parts[1]}/${parts[0]}`;
+
+  const [year, month, day] = dateString.split("-").map(Number);
+
+  return new Date(year, month - 1, day).toLocaleDateString("pt-BR", {
+    day: "2-digit",
+    month: "long",
+    year: "numeric"
+  });
 }
 
-function formatTime(time) {
-  if (!time) return "";
-  return String(time).slice(0, 5);
-}
-
-/* IDENTIFICAÇÃO DO PERÍODO DO DIA */
-
-function getTimePeriod(time) {
-  const hour = Number(formatTime(time).split(":")[0]);
-
-  if (hour >= 6 && hour < 12) {
-    return "☀️ Dia";
-  }
-
-  if (hour >= 12 && hour < 18) {
-    return "🌤️ Tarde";
-  }
-
-  return "🌙 Noite";
+function formatQuantity(value) {
+  return Number(value || 0).toLocaleString("pt-BR", {
+    maximumFractionDigits: 2
+  });
 }
 
 function escapeHTML(value) {
-  return String(value ?? "").replace(/[&<>"']/g, (char) => ({
+  return String(value ?? "").replace(/[&<>"']/g, char => ({
     "&": "&amp;",
     "<": "&lt;",
     ">": "&gt;",
@@ -85,101 +106,51 @@ function escapeHTML(value) {
   })[char]);
 }
 
-/* MENSAGENS */
-
-function showToast(message, isError = false) {
+function showMessage(message, isError = false) {
   const toast = $("toast");
-  toast.textContent = message;
-  toast.classList.remove("hidden", "error");
 
-  if (isError) toast.classList.add("error");
+  toast.textContent = message;
+  toast.classList.toggle("error", isError);
+  toast.classList.add("show");
 
   clearTimeout(toastTimeout);
 
   toastTimeout = setTimeout(() => {
-    toast.classList.add("hidden");
-  }, 4000);
+    toast.classList.remove("show");
+  }, 3500);
 }
 
-function showError(
-  error,
-  fallback = "Não foi possível concluir a operação."
-) {
-  console.error(error);
-  showToast(error?.message || fallback, true);
+function cleanTime(value) {
+  return String(value || "").slice(0, 5);
 }
 
-/* AUTENTICAÇÃO */
+function showAuthPanel(panelId) {
+  [
+    "loginPanel",
+    "registerPanel",
+    "recoveryPanel",
+    "passwordResetPanel"
+  ].forEach(id => {
+    const panel = $(id);
+    if (panel) {
+      panel.classList.toggle("hidden", id !== panelId);
+    }
+  });
 
-function showAuthPanel(panel) {
-  loginPanel.classList.add("hidden");
-  registerPanel.classList.add("hidden");
-  recoveryPanel.classList.add("hidden");
-  panel.classList.remove("hidden");
+  $("authSection").classList.remove("hidden");
+  $("appSection").classList.add("hidden");
 }
 
-$("showRegister").addEventListener("click", () => {
-  showAuthPanel(registerPanel);
-});
+/* ============================================================
+   AUTENTICAÇÃO
+   ============================================================ */
 
-$("showRecovery").addEventListener("click", () => {
-  showAuthPanel(recoveryPanel);
-});
-
-$("backToLogin1").addEventListener("click", () => {
-  showAuthPanel(loginPanel);
-});
-
-$("backToLogin2").addEventListener("click", () => {
-  showAuthPanel(loginPanel);
-});
-
-/* ENTRAR */
-
-$("loginForm").addEventListener("submit", async (event) => {
-  event.preventDefault();
-
-  const email = $("loginEmail").value.trim();
-  const password = $("loginPassword").value;
-
-  const button = event.submitter;
-  button.disabled = true;
-  button.textContent = "Entrando...";
-
-  try {
-    const { error } = await supabaseClient.auth.signInWithPassword({
-      email,
-      password
-    });
-
-    if (error) throw error;
-
-    showToast("Login realizado com sucesso!");
-
-  } catch (error) {
-    showError(
-      error,
-      "Não foi possível entrar. Confira seu e-mail e senha."
-    );
-
-  } finally {
-    button.disabled = false;
-    button.textContent = "Entrar";
-  }
-});
-
-/* CRIAR CONTA */
-
-$("registerForm").addEventListener("submit", async (event) => {
+async function handleRegister(event) {
   event.preventDefault();
 
   const name = $("registerName").value.trim();
   const email = $("registerEmail").value.trim();
   const password = $("registerPassword").value;
-
-  const button = event.submitter;
-  button.disabled = true;
-  button.textContent = "Criando conta...";
 
   try {
     const { data, error } = await supabaseClient.auth.signUp({
@@ -196,776 +167,597 @@ $("registerForm").addEventListener("submit", async (event) => {
 
     if (error) throw error;
 
-    if (data.session) {
-      showToast("Conta criada com sucesso!");
+    if (data.session && data.user) {
+      await showApplication(data.user);
+      showMessage("Conta criada com sucesso!");
     } else {
-      showToast(
-        "Conta criada! Confira seu e-mail para confirmar o cadastro."
+      showMessage(
+        "Cadastro realizado! Confira seu e-mail para confirmar a conta."
       );
-
-      showAuthPanel(loginPanel);
+      showAuthPanel("loginPanel");
     }
-
   } catch (error) {
-    showError(error, "Não foi possível criar sua conta.");
+    console.error("Erro no cadastro:", error);
+    showMessage(
+      error.message || "Não foi possível criar a conta.",
+      true
+    );
+  }
+}
 
+async function handleLogin(event) {
+  event.preventDefault();
+
+  const email = $("loginEmail").value.trim();
+  const password = $("loginPassword").value;
+
+  const button = $("loginForm").querySelector(
+    'button[type="submit"]'
+  );
+
+  button.disabled = true;
+  button.textContent = "Entrando...";
+
+  try {
+    const { data, error } =
+      await supabaseClient.auth.signInWithPassword({
+        email,
+        password
+      });
+
+    if (error) throw error;
+
+    passwordRecoveryInProgress = false;
+
+    await showApplication(data.user);
+
+    showMessage("Bem-vindo(a) ao MediHora!");
+  } catch (error) {
+    console.error("Erro no login:", error);
+
+    showMessage(
+      error.message || "E-mail ou senha inválidos.",
+      true
+    );
   } finally {
     button.disabled = false;
-    button.textContent = "Criar conta";
+    button.textContent = "Entrar";
   }
-});
+}
 
-/* RECUPERAR SENHA */
-
-$("recoveryForm").addEventListener("submit", async (event) => {
+async function handleRecovery(event) {
   event.preventDefault();
 
   const email = $("recoveryEmail").value.trim();
+  const button = $("recoveryForm").querySelector(
+    'button[type="submit"]'
+  );
+
+  button.disabled = true;
+  button.textContent = "Enviando...";
 
   try {
+    const redirectUrl =
+      window.location.origin + window.location.pathname;
+
     const { error } =
       await supabaseClient.auth.resetPasswordForEmail(email, {
-        redirectTo:
-          window.location.origin + window.location.pathname
+        redirectTo: redirectUrl
       });
 
     if (error) throw error;
 
-    showToast(
-      "Se o e-mail estiver cadastrado, você receberá o link de recuperação."
+    $("recoveryForm").reset();
+
+    showMessage(
+      "Link enviado! Abra o e-mail no mesmo navegador em que usa o MediHora."
     );
 
-    showAuthPanel(loginPanel);
-
+    showAuthPanel("loginPanel");
   } catch (error) {
-    showError(error, "Não foi possível enviar o link.");
+    console.error("Erro ao solicitar recuperação:", error);
+
+    showMessage(
+      error.message || "Não foi possível enviar o link.",
+      true
+    );
+  } finally {
+    button.disabled = false;
+    button.textContent = "Enviar link";
   }
-});
+}
 
-/* SAIR */
+/*
+  O Supabase envia o evento PASSWORD_RECOVERY quando o usuário
+  abre um link válido de recuperação de senha.
 
-logoutButton.addEventListener("click", async () => {
+  Nesse momento, mostramos o formulário de nova senha,
+  em vez de abrir diretamente a área dos medicamentos.
+*/
+
+function openPasswordResetScreen() {
+  passwordRecoveryInProgress = true;
+  currentUser = null;
+
+  $("appSection").classList.add("hidden");
+  $("authSection").classList.remove("hidden");
+  $("logoutButton").classList.add("hidden");
+
+  showAuthPanel("passwordResetPanel");
+
+  $("passwordResetForm").reset();
+
+  showMessage("Link validado. Cadastre sua nova senha.");
+}
+
+async function handlePasswordUpdate(event) {
+  event.preventDefault();
+
+  if (!passwordRecoveryInProgress) {
+    showMessage(
+      "Solicite um novo link de recuperação pelo e-mail.",
+      true
+    );
+    return;
+  }
+
+  const password = $("newPassword").value;
+  const confirmation = $("confirmNewPassword").value;
+
+  if (password.length < 6) {
+    showMessage(
+      "A senha precisa ter pelo menos 6 caracteres.",
+      true
+    );
+    return;
+  }
+
+  if (password !== confirmation) {
+    showMessage("As senhas não são iguais.", true);
+    return;
+  }
+
+  const button = $("passwordResetForm").querySelector(
+    'button[type="submit"]'
+  );
+
+  button.disabled = true;
+  button.textContent = "Salvando...";
+
+  try {
+    const { error } = await supabaseClient.auth.updateUser({
+      password
+    });
+
+    if (error) throw error;
+
+    passwordRecoveryInProgress = false;
+
+    $("passwordResetForm").reset();
+
+    /*
+      Encerramos a sessão de recuperação para que o próximo
+      acesso seja feito com o e-mail e a nova senha.
+    */
+
+    const { error: logoutError } =
+      await supabaseClient.auth.signOut();
+
+    if (logoutError) {
+      console.warn(
+        "A senha foi alterada, mas a sessão não foi encerrada:",
+        logoutError
+      );
+    }
+
+    currentUser = null;
+    medications = [];
+    schedulesByMedication = {};
+
+    $("appSection").classList.add("hidden");
+    $("authSection").classList.remove("hidden");
+    $("logoutButton").classList.add("hidden");
+
+    $("loginEmail").value = $("recoveryEmail").value.trim();
+    $("loginPassword").value = "";
+
+    showAuthPanel("loginPanel");
+
+    showMessage(
+      "Senha alterada com sucesso! Entre usando sua nova senha."
+    );
+  } catch (error) {
+    console.error("Erro ao atualizar senha:", error);
+
+    showMessage(
+      error.message || "Não foi possível alterar a senha.",
+      true
+    );
+  } finally {
+    button.disabled = false;
+    button.textContent = "Salvar nova senha";
+  }
+}
+
+async function logout() {
   const { error } = await supabaseClient.auth.signOut();
 
   if (error) {
-    showError(error);
+    showMessage(error.message, true);
     return;
   }
 
-  showToast("Você saiu da sua conta.");
-});
+  currentUser = null;
+  medications = [];
+  schedulesByMedication = {};
+  passwordRecoveryInProgress = false;
 
-/* SESSÃO DO USUÁRIO */
+  closeRestockForm(false);
 
-async function handleAuthSession(session) {
-  currentUser = session?.user || null;
+  $("appSection").classList.add("hidden");
+  $("authSection").classList.remove("hidden");
+  $("logoutButton").classList.add("hidden");
 
-  if (!currentUser) {
-    authSection.classList.remove("hidden");
-    appSection.classList.add("hidden");
-    logoutButton.classList.add("hidden");
-    return;
-  }
+  showAuthPanel("loginPanel");
 
-  authSection.classList.add("hidden");
-  appSection.classList.remove("hidden");
-  logoutButton.classList.remove("hidden");
-
-  const metadataName = currentUser.user_metadata?.full_name;
-  const emailName = currentUser.email?.split("@")[0];
-
-  $("userName").textContent =
-    metadataName || emailName || "";
-
-  await loadDashboard();
+  showMessage("Você saiu da sua conta.");
 }
 
-/* CARREGAMENTO DO PAINEL */
+async function showApplication(user) {
+  if (!user || passwordRecoveryInProgress || applicationLoading) {
+    return;
+  }
 
-async function loadDashboard() {
-  $("todayDate").textContent = formatDate(todayString());
+  applicationLoading = true;
+  currentUser = user;
 
   try {
-    await loadMedications();
-    await loadSchedules();
-    await loadTodayLogs();
+    $("authSection").classList.add("hidden");
+    $("appSection").classList.remove("hidden");
+    $("logoutButton").classList.remove("hidden");
 
+    const metadata = user.user_metadata || {};
+
+    const displayName =
+      metadata.full_name ||
+      user.email?.split("@")[0] ||
+      "bem-vindo(a)";
+
+    $("userName").textContent = displayName;
+    $("medicationStartDate").value = todayLocalDate();
+
+    await loadMedications();
+  } finally {
+    applicationLoading = false;
+  }
+}
+
+/* ============================================================
+   CARREGAR MEDICAMENTOS, HORÁRIOS E REGISTROS DO DIA
+   ============================================================ */
+
+async function loadMedications() {
+  if (!currentUser) return;
+
+  try {
+    const {
+      data: medicationData,
+      error: medicationError
+    } = await supabaseClient
+      .from("medications")
+      .select("*")
+      .eq("user_id", currentUser.id)
+      .order("name", { ascending: true });
+
+    if (medicationError) throw medicationError;
+
+    medications = medicationData || [];
+    schedulesByMedication = {};
+
+    if (medications.length) {
+      const medicationIds = medications.map(item => item.id);
+
+      const {
+        data: scheduleData,
+        error: scheduleError
+      } = await supabaseClient
+        .from("medication_schedules")
+        .select("*")
+        .in("medication_id", medicationIds)
+        .eq("user_id", currentUser.id)
+        .eq("enabled", true)
+        .order("scheduled_time", { ascending: true });
+
+      if (scheduleError) throw scheduleError;
+
+      (scheduleData || []).forEach(schedule => {
+        if (!schedulesByMedication[schedule.medication_id]) {
+          schedulesByMedication[schedule.medication_id] = [];
+        }
+
+        schedulesByMedication[schedule.medication_id].push(schedule);
+      });
+    }
+
+    const allSchedules =
+      Object.values(schedulesByMedication).flat();
+
+    if (allSchedules.length) {
+      const bounds = localDayBounds();
+
+      const {
+        data: logs,
+        error: logsError
+      } = await supabaseClient
+        .from("dose_logs")
+        .select("schedule_id,status,scheduled_for")
+        .in(
+          "schedule_id",
+          allSchedules.map(item => item.id)
+        )
+        .eq("user_id", currentUser.id)
+        .gte("scheduled_for", bounds.start)
+        .lt("scheduled_for", bounds.end);
+
+      if (logsError) throw logsError;
+
+      const statusBySchedule = new Map(
+        (logs || []).map(log => [
+          log.schedule_id,
+          log.status
+        ])
+      );
+
+      allSchedules.forEach(schedule => {
+        schedule.doseStatus =
+          statusBySchedule.get(schedule.id) || "pending";
+      });
+    }
+
+    $("todayDate").textContent =
+      formatDate(todayLocalDate());
+
+    updateCounters();
+    renderMedications();
     renderTodayMedications();
-    renderMedicationList();
 
   } catch (error) {
-    showError(
-      error,
-      "Não foi possível carregar seus medicamentos."
+    console.error("Erro ao carregar medicamentos:", error);
+
+    showMessage(
+      error.message || "Erro ao carregar seus medicamentos.",
+      true
     );
   }
 }
 
-/* CARREGAR MEDICAMENTOS */
+/* ============================================================
+   PAINEL DE HOJE E REGISTRO DE DOSES
+   ============================================================ */
 
-async function loadMedications() {
-  const { data, error } = await supabaseClient
-    .from("medications")
-    .select("*")
-    .eq("user_id", currentUser.id)
-    .order("created_at", { ascending: false });
+function isMedicationScheduledToday(medication) {
+  if (medication.status !== "active") return false;
 
-  if (error) throw error;
+  const today = todayLocalDate();
 
-  medications = data || [];
+  if (medication.start_date && medication.start_date > today) {
+    return false;
+  }
+
+  if (medication.start_date && medication.prescribed_days) {
+    const [year, month, day] =
+      medication.start_date.split("-").map(Number);
+
+    const end = new Date(Date.UTC(year, month - 1, day));
+
+    end.setUTCDate(
+      end.getUTCDate() + Number(medication.prescribed_days) - 1
+    );
+
+    const endDate = [
+      end.getUTCFullYear(),
+      String(end.getUTCMonth() + 1).padStart(2, "0"),
+      String(end.getUTCDate()).padStart(2, "0")
+    ].join("-");
+
+    if (today > endDate) return false;
+  }
+
+  return true;
 }
 
-/* CARREGAR HORÁRIOS */
+function periodEmoji(time) {
+  const hour = Number(String(time).slice(0, 2));
 
-async function loadSchedules() {
-  const { data, error } = await supabaseClient
-    .from("medication_schedules")
-    .select("*")
-    .eq("user_id", currentUser.id)
-    .eq("enabled", true);
+  if (hour >= 6 && hour < 12) return "☀️";
+  if (hour >= 12 && hour < 18) return "🌤️";
 
-  if (error) throw error;
-
-  schedules = data || [];
+  return "🌙";
 }
-
-/* CARREGAR REGISTROS DE HOJE */
-
-async function loadTodayLogs() {
-  const start = dateTimeForSchedule(todayString(), "00:00");
-  const end = dateTimeForSchedule(todayString(), "23:59");
-
-  const { data, error } = await supabaseClient
-    .from("dose_logs")
-    .select("*")
-    .eq("user_id", currentUser.id)
-    .gte("scheduled_for", start)
-    .lte("scheduled_for", end);
-
-  if (error) throw error;
-
-  todayLogs = data || [];
-}
-
-/* CONSULTA DE REGISTRO DA DOSE */
-
-function findDoseLog(scheduleId, scheduledFor) {
-  return todayLogs.find((log) =>
-    log.schedule_id === scheduleId &&
-    new Date(log.scheduled_for).getTime() ===
-      new Date(scheduledFor).getTime()
-  );
-}
-
-function getMedication(medicationId) {
-  return medications.find(
-    (item) => item.id === medicationId
-  );
-}
-
-/* MEDICAMENTOS DO DIA */
 
 function renderTodayMedications() {
   const container = $("todayMedicationList");
-  const today = todayString();
 
-  const items = schedules
-    .filter((schedule) => {
-      const medication = getMedication(
-        schedule.medication_id
-      );
-
-      if (!medication || medication.status !== "active") {
-        return false;
-      }
-
-      if (
-        medication.start_date &&
-        medication.start_date > today
-      ) {
-        return false;
-      }
-
-      const prescribedDays = Number(
-        medication.prescribed_days ??
-        medication.duration_days ??
-        0
-      );
-
-      if (
-        prescribedDays > 0 &&
-        medication.start_date
-      ) {
-        const startDate = new Date(
-          `${medication.start_date}T12:00:00`
-        );
-
-        const endDate = new Date(startDate);
-
-        endDate.setDate(
-          endDate.getDate() + prescribedDays - 1
-        );
-
-        const currentDate = new Date(
-          `${today}T12:00:00`
-        );
-
-        if (currentDate > endDate) {
-          return false;
-        }
-      }
-
-      return true;
-    })
-    .sort((a, b) =>
-      formatTime(a.scheduled_time).localeCompare(
-        formatTime(b.scheduled_time)
-      )
-    );
-
-  $("todayCount").textContent =
-    `${items.length} ${items.length === 1 ? "dose" : "doses"}`;
+  const items = medications
+    .filter(isMedicationScheduledToday)
+    .map(medication => ({
+      medication,
+      schedules:
+        schedulesByMedication[medication.id] || []
+    }))
+    .filter(item => item.schedules.length > 0);
 
   if (!items.length) {
     container.innerHTML = `
-      <div class="empty-state">
-        <p>
-          Você não tem horários de medicamentos programados para hoje.
-        </p>
-        <p class="muted">
-          Use o botão abaixo para cadastrar um medicamento.
-        </p>
+      <div class="today-empty">
+        <div style="font-size:32px">💊</div>
+        <strong>Nenhum medicamento programado para hoje.</strong>
+        <p>Cadastre um medicamento para visualizar seus horários aqui.</p>
       </div>
     `;
-
     return;
   }
 
-  container.innerHTML = items.map((schedule) => {
-    const medication = getMedication(
-      schedule.medication_id
-    );
+  container.innerHTML = items.map(({ medication, schedules }) => {
+    const stockUnit =
+      medication.stock_unit || "unidades";
 
-    const scheduledFor = dateTimeForSchedule(
-      today,
-      formatTime(schedule.scheduled_time)
-    );
+    const currentStock =
+      formatQuantity(medication.stock_quantity);
 
-    const log = findDoseLog(
-      schedule.id,
-      scheduledFor
-    );
+    const doseCards = schedules.map(schedule => {
+      const status = schedule.doseStatus || "pending";
+      const time = cleanTime(schedule.scheduled_time);
 
-    const status = log?.status || "pending";
+      const statusText =
+        status === "taken"
+          ? "💎 Tomado"
+          : status === "not_taken"
+            ? "😟 Não tomado"
+            : "⏳ Aguardando registro";
 
-    const statusClass = status === "taken"
-      ? "taken"
-      : status === "not_taken"
-        ? "not-taken"
-        : "";
+      const statusEmoji =
+        status === "taken"
+          ? "💎"
+          : status === "not_taken"
+            ? "😟"
+            : "⏳";
 
-    /* EMOJI DA SITUAÇÃO */
-
-    const statusLabel = status === "taken"
-      ? "💎 Tomado"
-      : status === "not_taken"
-        ? "😟 Não tomado"
-        : "⏳ Aguardando registro";
-
-    const quantity = Number(
-      schedule.dose_quantity || 1
-    );
-
-    const unit = medication.stock_unit || "unidades";
-
-    /* PERÍODO DO DIA */
-
-    const timePeriod = getTimePeriod(
-      schedule.scheduled_time
-    );
-
-    return `
-      <article class="dose-card ${statusClass}">
-
-        <div class="dose-top">
-
-          <div>
-            <div class="dose-name">
-              ${escapeHTML(medication.name)}
-            </div>
-
-            <div class="medication-meta">
-              ${escapeHTML(medication.dose || "")}
-            </div>
-          </div>
-
-          <div class="dose-time">
-            ${timePeriod} ·
-            ${escapeHTML(formatTime(schedule.scheduled_time))}
-          </div>
-
+      const stockInfo = status === "taken" ? `
+        <div class="dose-stock-info">
+          <span>📦</span>
+          <span>
+            Estoque restante:
+            <strong>${escapeHTML(currentStock)} ${escapeHTML(stockUnit)}</strong>
+          </span>
         </div>
+      ` : "";
 
-        <div class="dose-detail">
-          Quantidade desta dose:
-          ${quantity}
-          ${escapeHTML(unit)}
-        </div>
-
-        <div class="status-text ${
-          status === "taken"
-            ? "status-taken"
-            : status === "not_taken"
-              ? "status-not-taken"
-              : "status-pending"
-        }">
-          ${statusLabel}
-        </div>
-
-        <div class="dose-actions">
-
-          <button
-            class="button button-taken"
-            type="button"
-            data-action="taken"
-            data-schedule="${escapeHTML(schedule.id)}"
-            ${status === "taken" ? "disabled" : ""}
-          >
-            💎 Tomado
-          </button>
-
-          <button
-            class="button button-not-taken"
-            type="button"
-            data-action="not-taken"
-            data-schedule="${escapeHTML(schedule.id)}"
-            ${status === "taken" ? "disabled" : ""}
-          >
-            😟 Não tomado
-          </button>
-
-        </div>
-
-      </article>
-    `;
-  }).join("");
-
-  /* EVENTOS DOS BOTÕES */
-
-  container.querySelectorAll("[data-action]").forEach(
-    (button) => {
-      button.addEventListener("click", async () => {
-        const scheduleId = button.dataset.schedule;
-        const action = button.dataset.action;
-
-        if (action === "taken") {
-          await markDoseTaken(scheduleId);
-        } else {
-          await markDoseNotTaken(scheduleId);
-        }
-      });
-    }
-  );
-}
-
-/* REGISTRO DE DOSES */
-
-/* MARCAR COMO TOMADO */
-
-async function markDoseTaken(scheduleId) {
-  const schedule = schedules.find(
-    (item) => item.id === scheduleId
-  );
-
-  if (!schedule) return;
-
-  const scheduledFor = dateTimeForSchedule(
-    todayString(),
-    formatTime(schedule.scheduled_time)
-  );
-
-  const existingLog = findDoseLog(
-    scheduleId,
-    scheduledFor
-  );
-
-  if (existingLog?.status === "taken") {
-    showToast(
-      "Esta dose já foi registrada como tomada."
-    );
-    return;
-  }
-
-  const medication = getMedication(
-    schedule.medication_id
-  );
-
-  if (!medication) {
-    showToast("Medicamento não encontrado.", true);
-    return;
-  }
-
-  if (
-    Number(medication.stock_quantity || 0) <
-    Number(schedule.dose_quantity || 1)
-  ) {
-    showToast(
-      "Estoque insuficiente. Adicione estoque antes de registrar a dose.",
-      true
-    );
-    return;
-  }
-
-  try {
-    const { error } = await supabaseClient.rpc(
-      "mark_dose_taken",
-      {
-        p_schedule_id: scheduleId,
-        p_scheduled_for: scheduledFor
-      }
-    );
-
-    if (error) throw error;
-
-    showToast(
-      "Dose registrada como tomada. Estoque atualizado!"
-    );
-
-    await loadDashboard();
-
-  } catch (error) {
-    showError(
-      error,
-      "Não foi possível registrar a dose como tomada."
-    );
-  }
-}
-
-/* MARCAR COMO NÃO TOMADO */
-
-async function markDoseNotTaken(scheduleId) {
-  const schedule = schedules.find(
-    (item) => item.id === scheduleId
-  );
-
-  if (!schedule) return;
-
-  const scheduledFor = dateTimeForSchedule(
-    todayString(),
-    formatTime(schedule.scheduled_time)
-  );
-
-  const existingLog = findDoseLog(
-    scheduleId,
-    scheduledFor
-  );
-
-  if (existingLog?.status === "taken") {
-    showToast(
-      "Uma dose já registrada como tomada não pode ser alterada por aqui.",
-      true
-    );
-    return;
-  }
-
-  try {
-    const { error } = await supabaseClient.rpc(
-      "mark_dose_not_taken",
-      {
-        p_schedule_id: scheduleId,
-        p_scheduled_for: scheduledFor
-      }
-    );
-
-    if (error) throw error;
-
-    showToast(
-      "Dose registrada como não tomada. O estoque não foi alterado."
-    );
-
-    await loadDashboard();
-
-  } catch (error) {
-    showError(
-      error,
-      "Não foi possível registrar a dose."
-    );
-  }
-}
-
-/* LISTA DE MEDICAMENTOS */
-
-/* ESTIMATIVA DE ESTOQUE */
-
-function estimateStockDays(medication) {
-  const medicationSchedules = schedules.filter(
-    (schedule) =>
-      schedule.medication_id === medication.id
-  );
-
-  const dailyUse = medicationSchedules.reduce(
-    (total, schedule) =>
-      total + Number(schedule.dose_quantity || 1),
-    0
-  );
-
-  const stock = Number(
-    medication.stock_quantity || 0
-  );
-
-  if (dailyUse <= 0) return null;
-
-  return Math.floor(stock / dailyUse);
-}
-
-/* EXIBIR MEDICAMENTOS CADASTRADOS */
-
-function renderMedicationList() {
-  const container = $("medicationList");
-
-  if (!medications.length) {
-    container.innerHTML = `
-      <div class="empty-state">
-        <p>Você ainda não cadastrou medicamentos.</p>
-        <p class="muted">
-          Clique em “Adicionar novo medicamento” para começar.
-        </p>
-      </div>
-    `;
-
-    return;
-  }
-
-  container.innerHTML = medications.map((medication) => {
-    const medicationSchedules = schedules
-      .filter(
-        (schedule) =>
-          schedule.medication_id === medication.id
-      )
-      .sort((a, b) =>
-        formatTime(a.scheduled_time).localeCompare(
-          formatTime(b.scheduled_time)
-        )
-      );
-
-    const stock = Number(
-      medication.stock_quantity || 0
-    );
-
-    const unit = medication.stock_unit || "unidades";
-
-    const days = estimateStockDays(medication);
-
-    let stockClass = "";
-    let stockMessage = "";
-
-    if (stock <= 0) {
-      stockClass = "stock-empty";
-      stockMessage = "Estoque esgotado";
-
-    } else if (
-      days !== null &&
-      days <= Number(medication.stock_alert_days || 3)
-    ) {
-      stockClass = "stock-low";
-      stockMessage =
-        `Estoque para aproximadamente ${days} dia(s)`;
-
-    } else if (days !== null) {
-      stockMessage =
-        `Estoque para aproximadamente ${days} dia(s)`;
-    }
-
-    const scheduleText = medicationSchedules.length
-      ? medicationSchedules
-          .map((schedule) =>
-            formatTime(schedule.scheduled_time)
-          )
-          .join(" • ")
-      : "Nenhum horário ativo";
-
-    const statusText = medication.status === "active"
-      ? "Em uso"
-      : medication.status === "paused"
-        ? "Pausado"
-        : "Concluído";
-
-    return `
-      <article class="medication-card">
-
-        <div class="medication-card-top">
-          <div>
-            <h3>${escapeHTML(medication.name)}</h3>
-
-            <div class="medication-meta">
-              ${escapeHTML(medication.dose || "")}
-              ${medication.dose ? " • " : ""}
+      return `
+        <div class="today-dose status-${escapeHTML(status)}">
+          <div class="today-dose-heading">
+            <span class="today-dose-time">
+              ${periodEmoji(time)} Às ${escapeHTML(time)}
+            </span>
+            <span class="today-dose-state">
               ${statusText}
-            </div>
+            </span>
           </div>
+
+          <p>
+            Quantidade desta dose:
+            ${escapeHTML(formatQuantity(schedule.dose_quantity))}
+            ${escapeHTML(stockUnit)}
+          </p>
+
+          <div class="today-dose-actions">
+            <button
+              type="button"
+              class="button-taken ${status === "taken" ? "selected" : ""}"
+              data-action="today-taken"
+              data-id="${escapeHTML(schedule.id)}"
+              data-time="${escapeHTML(time)}"
+              ${status === "taken" ? "disabled" : ""}
+            >
+              Tomado
+            </button>
+
+            <button
+              type="button"
+              class="button-not-taken ${status === "not_taken" ? "selected" : ""}"
+              data-action="today-not-taken"
+              data-id="${escapeHTML(schedule.id)}"
+              data-time="${escapeHTML(time)}"
+              ${status === "taken" ? "disabled" : ""}
+            >
+              Não tomado
+            </button>
+          </div>
+
+          ${stockInfo}
         </div>
+      `;
+    }).join("");
 
-        <div class="medication-meta">
-          <strong>Horários:</strong>
-          ${escapeHTML(scheduleText)}
-        </div>
-
-        <div class="stock-line ${stockClass}">
-          Estoque:
-          ${stock}
-          ${escapeHTML(unit)}
-          ${stockMessage ? ` — ${escapeHTML(stockMessage)}` : ""}
-        </div>
-
-        <div class="card-actions">
-
-          <button
-            class="button button-outline"
-            type="button"
-            data-edit="${escapeHTML(medication.id)}"
-          >
-            Editar
-          </button>
-
-          <button
-            class="button button-primary"
-            type="button"
-            data-restock="${escapeHTML(medication.id)}"
-          >
-            ＋ Adicionar estoque
-          </button>
-
-          ${
-            medication.status === "active"
-              ? `
-                <button
-                  class="button button-light"
-                  type="button"
-                  data-status="paused"
-                  data-id="${escapeHTML(medication.id)}"
-                >
-                  Pausar
-                </button>
-              `
-              : medication.status === "paused"
-                ? `
-                  <button
-                    class="button button-light"
-                    type="button"
-                    data-status="active"
-                    data-id="${escapeHTML(medication.id)}"
-                  >
-                    Retomar
-                  </button>
-                `
-                : ""
-          }
-
-          ${
-            medication.status !== "completed"
-              ? `
-                <button
-                  class="button button-light"
-                  type="button"
-                  data-status="completed"
-                  data-id="${escapeHTML(medication.id)}"
-                >
-                  Concluir
-                </button>
-              `
-              : ""
-          }
-
-        </div>
+    return `
+      <article class="today-medication-card">
+        <h3>${escapeHTML(medication.name)}</h3>
+        <p class="medication-dose">
+          ${escapeHTML(medication.dose)}
+        </p>
+        ${doseCards}
       </article>
     `;
   }).join("");
+}
 
-  /* BOTÃO EDITAR */
+async function markDoseTaken(scheduleId, time) {
+  const scheduledFor =
+    localScheduleTimestamp(todayLocalDate(), time);
 
-  container.querySelectorAll("[data-edit]").forEach(
-    (button) => {
-      button.addEventListener("click", () => {
-        editMedication(button.dataset.edit);
+  try {
+    const { data, error } =
+      await supabaseClient.rpc("mark_dose_taken", {
+        p_schedule_id: scheduleId,
+        p_scheduled_for: scheduledFor
       });
-    }
-  );
 
-  /* BOTÃO ADICIONAR ESTOQUE */
+    if (error) throw error;
 
-  container.querySelectorAll("[data-restock]").forEach(
-    (button) => {
-      button.addEventListener("click", () => {
-        openRestock(button.dataset.restock);
+    await loadMedications();
+
+    showMessage(
+      data?.already_taken
+        ? "Esta dose já estava registrada como tomada."
+        : "Dose registrada como tomada. Estoque atualizado."
+    );
+
+  } catch (error) {
+    console.error(error);
+
+    showMessage(
+      error.message || "Não foi possível registrar a dose.",
+      true
+    );
+  }
+}
+
+async function markDoseNotTaken(scheduleId, time) {
+  if (!confirm("Confirma que esta dose não foi tomada?")) {
+    return;
+  }
+
+  const scheduledFor =
+    localScheduleTimestamp(todayLocalDate(), time);
+
+  try {
+    const { error } =
+      await supabaseClient.rpc("mark_dose_not_taken", {
+        p_schedule_id: scheduleId,
+        p_scheduled_for: scheduledFor
       });
-    }
-  );
 
-  /* BOTÕES DE STATUS */
+    if (error) throw error;
 
-  container.querySelectorAll("[data-status]").forEach(
-    (button) => {
-      button.addEventListener("click", () => {
-        updateMedicationStatus(
-          button.dataset.id,
-          button.dataset.status
-        );
-      });
-    }
-  );
+    await loadMedications();
+
+    showMessage("Registro atualizado: dose não tomada.");
+
+  } catch (error) {
+    console.error(error);
+
+    showMessage(
+      error.message || "Não foi possível registrar a dose.",
+      true
+    );
+  }
 }
 
-/* FORMULÁRIO DE MEDICAMENTO */
+/* ============================================================
+   CADASTRO E EDIÇÃO DE MEDICAMENTOS
+   ============================================================ */
 
-function clearMedicationForm() {
-  $("medicationForm").reset();
-
-  $("medicationId").value = "";
-  $("medicationStock").value = "0";
-  $("medicationStartDate").value = todayString();
-
-  $("scheduleList").innerHTML = "";
-
-  $("medicationFormTitle").textContent =
-    "Novo medicamento";
-}
-
-function openMedicationForm() {
-  clearMedicationForm();
-
-  medicationPanel.classList.remove("hidden");
-
-  medicationPanel.scrollIntoView({
-    behavior: "smooth",
-    block: "start"
-  });
-
-  addScheduleRow();
-}
-
-$("newMedicationButton").addEventListener(
-  "click",
-  openMedicationForm
-);
-
-function closeMedicationForm() {
-  medicationPanel.classList.add("hidden");
-  clearMedicationForm();
-}
-
-$("closeMedicationButton").addEventListener(
-  "click",
-  closeMedicationForm
-);
-
-$("cancelMedicationButton").addEventListener(
-  "click",
-  closeMedicationForm
-);
-
-/* ADICIONAR HORÁRIO */
-
-function addScheduleRow(time = "", quantity = 1) {
+function addScheduleRow(time = "", quantity = "1") {
   const row = document.createElement("div");
 
   row.className = "schedule-row";
@@ -982,7 +774,7 @@ function addScheduleRow(time = "", quantity = 1) {
     </div>
 
     <div>
-      <label>Quantidade</label>
+      <label>Quantidade por horário</label>
       <input
         class="schedule-quantity"
         type="number"
@@ -993,18 +785,22 @@ function addScheduleRow(time = "", quantity = 1) {
       >
     </div>
 
-    <button
-      class="remove-schedule"
-      type="button"
-      title="Remover horário"
-    >
-      ✕
+    <button class="remove-schedule" type="button">
+      Remover
     </button>
   `;
 
   row.querySelector(".remove-schedule").addEventListener(
     "click",
     () => {
+      const rows =
+        $("scheduleList").querySelectorAll(".schedule-row");
+
+      if (rows.length <= 1) {
+        showMessage("Mantenha pelo menos um horário.", true);
+        return;
+      }
+
       row.remove();
     }
   );
@@ -1012,446 +808,980 @@ function addScheduleRow(time = "", quantity = 1) {
   $("scheduleList").appendChild(row);
 }
 
-$("addScheduleButton").addEventListener("click", () => {
+function resetMedicationForm() {
+  editingMedicationId = null;
+
+  $("medicationForm").reset();
+  $("medicationId").value = "";
+
+  $("formTitle").textContent = "Novo medicamento";
+  $("saveMedicationButton").textContent =
+    "Salvar medicamento";
+
+  $("medicationStartDate").value = todayLocalDate();
+  $("medicationStock").value = "0";
+  $("medicationUnit").value = "comprimidos";
+
+  $("scheduleList").innerHTML = "";
+
   addScheduleRow();
-});
-
-/* LER HORÁRIOS DO FORMULÁRIO */
-
-function readSchedulesFromForm() {
-  const rows = [
-    ...$("scheduleList").querySelectorAll(".schedule-row")
-  ];
-
-  return rows.map((row) => ({
-    scheduled_time:
-      row.querySelector(".schedule-time").value,
-
-    dose_quantity:
-      Number(
-        row.querySelector(".schedule-quantity").value
-      )
-  })).filter((item) =>
-    item.scheduled_time &&
-    Number.isFinite(item.dose_quantity) &&
-    item.dose_quantity > 0
-  );
 }
 
-/* SALVAR HORÁRIOS */
+function openNewMedicationForm() {
+  closeRestockForm(false);
+  resetMedicationForm();
 
-async function saveMedicationSchedules(
-  medicationId,
-  scheduleItems
-) {
-  // Desativa os horários anteriores para preservar o histórico.
-  const { error: disableError } = await supabaseClient
-    .from("medication_schedules")
-    .update({ enabled: false })
-    .eq("user_id", currentUser.id)
-    .eq("medication_id", medicationId);
+  $("medicationPanel").classList.remove("hidden");
 
-  if (disableError) throw disableError;
-
-  if (!scheduleItems.length) return;
-
-  const rows = scheduleItems.map((item) => ({
-    user_id: currentUser.id,
-    medication_id: medicationId,
-    scheduled_time: item.scheduled_time,
-    dose_quantity: item.dose_quantity,
-    enabled: true
-  }));
-
-  const { error } = await supabaseClient
-    .from("medication_schedules")
-    .insert(rows);
-
-  if (error) throw error;
+  $("medicationPanel").scrollIntoView({
+    behavior: "smooth",
+    block: "start"
+  });
 }
 
-/* SALVAR MEDICAMENTO */
+function closeMedicationForm() {
+  resetMedicationForm();
+  $("medicationPanel").classList.add("hidden");
+}
 
-$("medicationForm").addEventListener(
-  "submit",
-  async (event) => {
-    event.preventDefault();
-
-    const button = event.submitter;
-
-    button.disabled = true;
-    button.textContent = "Salvando...";
-
-    try {
-      const medicationId = $("medicationId").value;
-
-      const scheduleItems = readSchedulesFromForm();
-
-      if (!scheduleItems.length) {
-        throw new Error(
-          "Adicione pelo menos um horário válido."
-        );
-      }
-
-      const prescribedDays = Number(
-        $("medicationDuration").value
-      ) || 0;
-
-      const medicationData = {
-        user_id: currentUser.id,
-
-        name: $("medicationName").value.trim(),
-
-        dose: $("medicationDose").value.trim(),
-
-        stock_unit: $("medicationUnit").value,
-
-        start_date:
-          $("medicationStartDate").value || todayString(),
-
-        duration_days: prescribedDays,
-
-        prescribed_days: prescribedDays,
-
-        instructions:
-          $("medicationInstructions").value.trim(),
-
-        status: "active"
-      };
-
-      if (!medicationData.name) {
-        throw new Error(
-          "Informe o nome do medicamento."
-        );
-      }
-
-      let savedMedicationId = medicationId;
-
-      /* ATUALIZAR MEDICAMENTO EXISTENTE */
-
-      if (medicationId) {
-        const { error } = await supabaseClient
-          .from("medications")
-          .update({
-            name: medicationData.name,
-            dose: medicationData.dose,
-            stock_unit: medicationData.stock_unit,
-            start_date: medicationData.start_date,
-            duration_days: medicationData.duration_days,
-            prescribed_days: medicationData.prescribed_days,
-            instructions: medicationData.instructions
-          })
-          .eq("id", medicationId)
-          .eq("user_id", currentUser.id);
-
-        if (error) throw error;
-
-      } else {
-
-        /* NOVO MEDICAMENTO */
-
-        medicationData.stock_quantity = Number(
-          $("medicationStock").value || 0
-        );
-
-        const { data, error } = await supabaseClient
-          .from("medications")
-          .insert(medicationData)
-          .select("id")
-          .single();
-
-        if (error) throw error;
-
-        savedMedicationId = data.id;
-
-        /* REGISTRAR ESTOQUE INICIAL */
-
-        if (medicationData.stock_quantity > 0) {
-          const { error: movementError } =
-            await supabaseClient
-              .from("stock_movements")
-              .insert({
-                user_id: currentUser.id,
-                medication_id: savedMedicationId,
-                movement_type: "in",
-                quantity: medicationData.stock_quantity,
-                note: "Estoque inicial"
-              });
-
-          if (movementError) {
-            console.warn(
-              "Não foi possível registrar o movimento inicial:",
-              movementError
-            );
-          }
-        }
-      }
-
-      /* SALVAR HORÁRIOS */
-
-      await saveMedicationSchedules(
-        savedMedicationId,
-        scheduleItems
-      );
-
-      closeMedicationForm();
-
-      showToast("Medicamento salvo com sucesso!");
-
-      await loadDashboard();
-
-    } catch (error) {
-      showError(
-        error,
-        "Não foi possível salvar o medicamento."
-      );
-
-    } finally {
-      button.disabled = false;
-      button.textContent = "Salvar medicamento";
-    }
-  }
-);
-
-/* EDIÇÃO */
-
-function editMedication(medicationId) {
-  const medication = getMedication(medicationId);
-
-  if (!medication) return;
-
-  clearMedicationForm();
+function fillMedicationForm(medication, schedules) {
+  editingMedicationId = medication.id;
 
   $("medicationId").value = medication.id;
-
-  $("medicationName").value =
-    medication.name || "";
-
-  $("medicationDose").value =
-    medication.dose || "";
+  $("medicationName").value = medication.name || "";
+  $("medicationDose").value = medication.dose || "";
 
   $("medicationUnit").value =
     medication.stock_unit || "comprimidos";
 
-  $("medicationStartDate").value =
-    medication.start_date || "";
+  $("medicationStock").value =
+    medication.stock_quantity ?? 0;
 
-  $("medicationDuration").value =
-    medication.prescribed_days ??
-    medication.duration_days ??
-    "";
+  $("medicationStartDate").value =
+    medication.start_date || todayLocalDate();
+
+  $("medicationDays").value =
+    medication.prescribed_days || "";
 
   $("medicationInstructions").value =
     medication.instructions || "";
 
-  const medicationSchedules = schedules.filter(
-    (schedule) =>
-      schedule.medication_id === medicationId
-  );
+  $("formTitle").textContent = "Editar medicamento";
+  $("saveMedicationButton").textContent =
+    "Salvar alterações";
 
-  medicationSchedules.forEach((schedule) => {
-    addScheduleRow(
-      formatTime(schedule.scheduled_time),
-      Number(schedule.dose_quantity || 1)
-    );
-  });
+  $("scheduleList").innerHTML = "";
 
-  if (!medicationSchedules.length) {
+  if (schedules.length) {
+    schedules.forEach(schedule => {
+      addScheduleRow(
+        cleanTime(schedule.scheduled_time),
+        String(schedule.dose_quantity || 1)
+      );
+    });
+  } else {
     addScheduleRow();
   }
-
-  $("medicationFormTitle").textContent =
-    "Editar medicamento";
-
-  medicationPanel.classList.remove("hidden");
-
-  medicationPanel.scrollIntoView({
-    behavior: "smooth",
-    block: "start"
-  });
 }
 
-/* STATUS DO MEDICAMENTO */
-
-async function updateMedicationStatus(
-  medicationId,
-  status
-) {
-  const labels = {
-    active: "retomado",
-    paused: "pausado",
-    completed: "concluído"
-  };
-
-  try {
-    const { error } = await supabaseClient
-      .from("medications")
-      .update({ status })
-      .eq("id", medicationId)
-      .eq("user_id", currentUser.id);
-
-    if (error) throw error;
-
-    if (status !== "active") {
-      const { error: scheduleError } =
-        await supabaseClient
-          .from("medication_schedules")
-          .update({ enabled: false })
-          .eq("user_id", currentUser.id)
-          .eq("medication_id", medicationId);
-
-      if (scheduleError) throw scheduleError;
-
-    } else {
-      // Reativa os horários que já estavam cadastrados.
-      const { error: scheduleError } =
-        await supabaseClient
-          .from("medication_schedules")
-          .update({ enabled: true })
-          .eq("user_id", currentUser.id)
-          .eq("medication_id", medicationId);
-
-      if (scheduleError) throw scheduleError;
-    }
-
-    showToast(
-      `Medicamento ${labels[status]}.`
-    );
-
-    await loadDashboard();
-
-  } catch (error) {
-    showError(
-      error,
-      "Não foi possível alterar o status."
-    );
-  }
-}
-
-/* REPOSIÇÃO DE ESTOQUE */
-
-function openRestock(medicationId) {
-  const medication = getMedication(medicationId);
+function editMedication(id) {
+  const medication =
+    medications.find(item => item.id === id);
 
   if (!medication) return;
 
-  $("restockForm").reset();
-
-  $("restockMedicationId").value =
-    medication.id;
-
-  $("restockMedicationName").textContent =
-    medication.name;
-
-  restockPanel.classList.remove("hidden");
-
-  restockPanel.scrollIntoView({
-    behavior: "smooth",
-    block: "start"
-  });
-}
-
-function closeRestock() {
-  restockPanel.classList.add("hidden");
-  $("restockForm").reset();
-}
-
-$("closeRestockButton").addEventListener(
-  "click",
-  closeRestock
-);
-
-$("cancelRestockButton").addEventListener(
-  "click",
-  closeRestock
-);
-
-/* SALVAR REPOSIÇÃO */
-
-$("restockForm").addEventListener(
-  "submit",
-  async (event) => {
-    event.preventDefault();
-
-    const button = event.submitter;
-
-    button.disabled = true;
-    button.textContent = "Salvando...";
-
-    try {
-      const medicationId =
-        $("restockMedicationId").value;
-
-      const quantity =
-        Number($("restockQuantity").value);
-
-      const note =
-        $("restockNote").value.trim() ||
-        "Reposição de estoque";
-
-      if (
-        !medicationId ||
-        !Number.isFinite(quantity) ||
-        quantity <= 0
-      ) {
-        throw new Error(
-          "Informe uma quantidade válida."
-        );
-      }
-
-      const { error } = await supabaseClient.rpc(
-        "restock_medication",
-        {
-          p_medication_id: medicationId,
-          p_quantity: quantity,
-          p_note: note
-        }
-      );
-
-      if (error) throw error;
-
-      closeRestock();
-
-      showToast(
-        "Estoque atualizado com sucesso!"
-      );
-
-      await loadDashboard();
-
-    } catch (error) {
-      showError(
-        error,
-        "Não foi possível adicionar estoque."
-      );
-
-    } finally {
-      button.disabled = false;
-      button.textContent = "Confirmar reposição";
-    }
-  }
-);
-
-/* INICIALIZAÇÃO */
-
-async function initializeApp() {
-  const { data, error } =
-    await supabaseClient.auth.getSession();
-
-  if (error) {
-    showError(
-      error,
-      "Não foi possível verificar sua sessão."
+  if (medication.status === "completed") {
+    showMessage(
+      "Tratamentos concluídos não podem ser editados.",
+      true
     );
     return;
   }
 
-  await handleAuthSession(data.session);
+  closeRestockForm(false);
 
-  supabaseClient.auth.onAuthStateChange(
-    async (_event, session) => {
-      await handleAuthSession(session);
+  fillMedicationForm(
+    medication,
+    schedulesByMedication[id] || []
+  );
+
+  $("medicationPanel").classList.remove("hidden");
+
+  $("medicationPanel").scrollIntoView({
+    behavior: "smooth",
+    block: "start"
+  });
+}
+
+async function saveMedication(event) {
+  event.preventDefault();
+
+  if (!currentUser || savingMedication) return;
+
+  const wasEditing = Boolean(editingMedicationId);
+
+  const name = $("medicationName").value.trim();
+  const dose = $("medicationDose").value.trim();
+  const stockUnit = $("medicationUnit").value;
+
+  const stockQuantity =
+    Number($("medicationStock").value || 0);
+
+  const startDate = $("medicationStartDate").value;
+
+  const prescribedDays = $("medicationDays").value
+    ? Number($("medicationDays").value)
+    : null;
+
+  const instructions =
+    $("medicationInstructions").value.trim();
+
+  if (!name || !dose || !startDate) {
+    showMessage("Preencha os campos obrigatórios.", true);
+    return;
+  }
+
+  if (
+    !Number.isFinite(stockQuantity) ||
+    stockQuantity < 0
+  ) {
+    showMessage("O estoque não pode ser negativo.", true);
+    return;
+  }
+
+  if (
+    prescribedDays !== null &&
+    (!Number.isInteger(prescribedDays) || prescribedDays < 1)
+  ) {
+    showMessage(
+      "Informe uma duração válida em dias.",
+      true
+    );
+    return;
+  }
+
+  const scheduleValues = [
+    ...$("scheduleList").querySelectorAll(".schedule-row")
+  ].map(row => ({
+    scheduled_time:
+      row.querySelector(".schedule-time").value,
+
+    dose_quantity:
+      Number(row.querySelector(".schedule-quantity").value)
+  }));
+
+  if (
+    !scheduleValues.length ||
+    scheduleValues.some(item =>
+      !item.scheduled_time ||
+      !Number.isFinite(item.dose_quantity) ||
+      item.dose_quantity <= 0
+    )
+  ) {
+    showMessage(
+      "Confira os horários e as quantidades informadas.",
+      true
+    );
+    return;
+  }
+
+  const uniqueTimes =
+    scheduleValues.map(item => item.scheduled_time);
+
+  if (new Set(uniqueTimes).size !== uniqueTimes.length) {
+    showMessage(
+      "Não repita o mesmo horário no cadastro.",
+      true
+    );
+    return;
+  }
+
+  savingMedication = true;
+
+  const saveButton = $("saveMedicationButton");
+
+  saveButton.disabled = true;
+  saveButton.textContent = "Salvando...";
+
+  try {
+    let medicationId = editingMedicationId;
+    let previousStock = 0;
+
+    if (wasEditing) {
+      const existing =
+        medications.find(item => item.id === editingMedicationId);
+
+      if (!existing) {
+        throw new Error("Medicamento não encontrado.");
+      }
+
+      previousStock =
+        Number(existing.stock_quantity || 0);
+
+      const { error } = await supabaseClient
+        .from("medications")
+        .update({
+          name,
+          dose,
+          stock_unit: stockUnit,
+          stock_quantity: stockQuantity,
+          start_date: startDate,
+          prescribed_days: prescribedDays,
+          instructions,
+          updated_at: new Date().toISOString()
+        })
+        .eq("id", medicationId)
+        .eq("user_id", currentUser.id);
+
+      if (error) throw error;
+
+    } else {
+      const { data, error } = await supabaseClient
+        .from("medications")
+        .insert({
+          user_id: currentUser.id,
+          name,
+          dose,
+          stock_unit: stockUnit,
+          stock_quantity: stockQuantity,
+          start_date: startDate,
+          prescribed_days: prescribedDays,
+          instructions,
+          status: "active"
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      medicationId = data.id;
+
+      if (stockQuantity > 0) {
+        const { error: movementError } =
+          await supabaseClient
+            .from("stock_movements")
+            .insert({
+              user_id: currentUser.id,
+              medication_id: medicationId,
+              movement_type: "in",
+              quantity: stockQuantity,
+              note: "Estoque inicial do cadastro"
+            });
+
+        if (movementError) throw movementError;
+      }
+    }
+
+    // Registra ajustes manuais de estoque na edição.
+    if (wasEditing && stockQuantity !== previousStock) {
+      const difference = stockQuantity - previousStock;
+
+      const { error: movementError } =
+        await supabaseClient
+          .from("stock_movements")
+          .insert({
+            user_id: currentUser.id,
+            medication_id: medicationId,
+            movement_type: difference > 0 ? "in" : "out",
+            quantity: Math.abs(difference),
+            note: "Ajuste manual de estoque"
+          });
+
+      if (movementError) throw movementError;
+    }
+
+    // Preserva os horários existentes para não apagar
+    // o histórico de registros de doses.
+    const {
+      data: oldSchedules,
+      error: oldError
+    } = await supabaseClient
+      .from("medication_schedules")
+      .select("*")
+      .eq("medication_id", medicationId)
+      .eq("user_id", currentUser.id)
+      .eq("enabled", true);
+
+    if (oldError) throw oldError;
+
+    const oldList = oldSchedules || [];
+    const schedulesToKeep = [];
+
+    for (const value of scheduleValues) {
+      const existing = oldList.find(item =>
+        !schedulesToKeep.includes(item.id) &&
+        cleanTime(item.scheduled_time) === value.scheduled_time
+      );
+
+      if (existing) {
+        const { error } = await supabaseClient
+          .from("medication_schedules")
+          .update({
+            dose_quantity: value.dose_quantity,
+            enabled: true
+          })
+          .eq("id", existing.id)
+          .eq("user_id", currentUser.id);
+
+        if (error) throw error;
+
+        schedulesToKeep.push(existing.id);
+
+      } else {
+        const { data, error } = await supabaseClient
+          .from("medication_schedules")
+          .insert({
+            user_id: currentUser.id,
+            medication_id: medicationId,
+            scheduled_time: value.scheduled_time,
+            dose_quantity: value.dose_quantity,
+            enabled: true
+          })
+          .select()
+          .single();
+
+        if (error) throw error;
+
+        schedulesToKeep.push(data.id);
+      }
+    }
+
+    const schedulesToDisable = oldList
+      .filter(item => !schedulesToKeep.includes(item.id))
+      .map(item => item.id);
+
+    if (schedulesToDisable.length) {
+      const { error } = await supabaseClient
+        .from("medication_schedules")
+        .update({ enabled: false })
+        .in("id", schedulesToDisable)
+        .eq("user_id", currentUser.id);
+
+      if (error) throw error;
+    }
+
+    $("medicationPanel").classList.add("hidden");
+
+    resetMedicationForm();
+
+    await loadMedications();
+
+    showMessage(
+      wasEditing
+        ? "Medicamento atualizado com sucesso."
+        : "Medicamento cadastrado com sucesso."
+    );
+
+  } catch (error) {
+    console.error(error);
+
+    showMessage(
+      error.message || "Não foi possível salvar o medicamento.",
+      true
+    );
+
+  } finally {
+    savingMedication = false;
+
+    saveButton.disabled = false;
+
+    saveButton.textContent = wasEditing
+      ? "Salvar alterações"
+      : "Salvar medicamento";
+  }
+}
+
+/* ============================================================
+   REPOSIÇÃO DE ESTOQUE
+   ============================================================ */
+
+function openRestockForm(medicationId) {
+  const medication =
+    medications.find(item => item.id === medicationId);
+
+  if (!medication) {
+    showMessage("Medicamento não encontrado.", true);
+    return;
+  }
+
+  $("medicationPanel").classList.add("hidden");
+
+  restockMedicationId = medicationId;
+
+  $("restockMedicationName").textContent =
+    `${medication.name} • Estoque atual: ${
+      formatQuantity(medication.stock_quantity)
+    } ${medication.stock_unit || "unidades"}`;
+
+  $("restockForm").reset();
+
+  $("restockPanel").classList.remove("hidden");
+
+  $("restockPanel").scrollIntoView({
+    behavior: "smooth",
+    block: "center"
+  });
+
+  $("restockQuantity").focus();
+}
+
+function closeRestockForm(scroll = false) {
+  if (!$("restockPanel")) return;
+
+  $("restockPanel").classList.add("hidden");
+
+  if ($("restockForm")) {
+    $("restockForm").reset();
+  }
+
+  restockMedicationId = null;
+
+  if (scroll) {
+    $("medicationList").scrollIntoView({
+      behavior: "smooth",
+      block: "start"
+    });
+  }
+}
+
+async function saveRestock(event) {
+  event.preventDefault();
+
+  if (
+    !currentUser ||
+    !restockMedicationId ||
+    savingRestock
+  ) {
+    return;
+  }
+
+  const quantity = Number($("restockQuantity").value);
+
+  const note =
+    $("restockNote").value.trim() ||
+    "Reposição de estoque";
+
+  if (!Number.isFinite(quantity) || quantity <= 0) {
+    showMessage(
+      "Informe uma quantidade maior que zero.",
+      true
+    );
+    return;
+  }
+
+  savingRestock = true;
+
+  const button = $("saveRestockButton");
+
+  button.disabled = true;
+  button.textContent = "Salvando...";
+
+  try {
+    const medicationId = restockMedicationId;
+
+    const { error } = await supabaseClient.rpc(
+      "restock_medication",
+      {
+        p_medication_id: medicationId,
+        p_quantity: quantity,
+        p_note: note
+      }
+    );
+
+    if (error) throw error;
+
+    closeRestockForm(false);
+
+    await loadMedications();
+
+    showMessage("Estoque adicionado com sucesso!");
+
+  } catch (error) {
+    console.error(error);
+
+    showMessage(
+      error.message || "Não foi possível atualizar o estoque.",
+      true
+    );
+
+  } finally {
+    savingRestock = false;
+
+    button.disabled = false;
+    button.textContent = "Salvar estoque";
+  }
+}
+
+/* ============================================================
+   STATUS DO MEDICAMENTO
+   ============================================================ */
+
+async function updateMedicationStatus(id, status) {
+  const messages = {
+    active: "Deseja reativar este medicamento?",
+    paused: "Deseja pausar este medicamento?",
+    completed: "Deseja marcar este tratamento como concluído?"
+  };
+
+  if (!confirm(messages[status])) return;
+
+  try {
+    const { error } = await supabaseClient
+      .from("medications")
+      .update({
+        status,
+        updated_at: new Date().toISOString()
+      })
+      .eq("id", id)
+      .eq("user_id", currentUser.id);
+
+    if (error) throw error;
+
+    await loadMedications();
+
+    const labels = {
+      active: "reativado",
+      paused: "pausado",
+      completed: "concluído"
+    };
+
+    showMessage(`Medicamento ${labels[status]}.`);
+
+  } catch (error) {
+    console.error(error);
+
+    showMessage(
+      error.message || "Não foi possível atualizar o medicamento.",
+      true
+    );
+  }
+}
+
+/* ============================================================
+   LISTA DE MEDICAMENTOS, ESTOQUE E CONTADOR
+   ============================================================ */
+
+function updateCounters() {
+  $("medicationCount").textContent = medications.length;
+}
+
+function stockMessage(medication) {
+  const stock = Number(medication.stock_quantity || 0);
+
+  const dailySchedules =
+    schedulesByMedication[medication.id] || [];
+
+  const dailyUse = dailySchedules.reduce(
+    (sum, schedule) =>
+      sum + Number(schedule.dose_quantity || 0),
+    0
+  );
+
+  if (stock <= 0) {
+    return `<span class="stock-empty">Estoque esgotado</span>`;
+  }
+
+  if (dailyUse <= 0) {
+    return `Estoque atual: ${formatQuantity(stock)} ${
+      escapeHTML(medication.stock_unit || "unidades")
+    }`;
+  }
+
+  const days = Math.floor(stock / dailyUse);
+
+  if (days <= Number(medication.stock_alert_days || 3)) {
+    return `
+      <span class="stock-warning">
+        Estoque para aproximadamente ${days} dia(s)
+      </span>
+    `;
+  }
+
+  return `Estoque para aproximadamente ${days} dias`;
+}
+
+function renderMedications() {
+  const container = $("medicationList");
+
+  if (!medications.length) {
+    container.innerHTML = `
+      <div class="empty-state">
+        Você ainda não cadastrou medicamentos.
+        <br>
+        Use o botão “Adicionar novo medicamento” para começar.
+      </div>
+    `;
+    return;
+  }
+
+  container.innerHTML = medications.map(medication => {
+    const schedules =
+      schedulesByMedication[medication.id] || [];
+
+    const times = schedules
+      .map(item => cleanTime(item.scheduled_time))
+      .join(", ");
+
+    const statusLabel =
+      medication.status === "paused"
+        ? "Pausado"
+        : medication.status === "completed"
+          ? "Concluído"
+          : "Em uso";
+
+    return `
+      <article class="medication-item">
+        <div class="medication-item-top">
+          <div>
+            <h3>${escapeHTML(medication.name)}</h3>
+            <p class="medication-dose">
+              ${escapeHTML(medication.dose)}
+            </p>
+          </div>
+          <span class="small-text">${statusLabel}</span>
+        </div>
+
+        <div class="medication-meta">
+          <div>
+            Horários:
+            ${escapeHTML(times || "Não definidos")}
+          </div>
+
+          <div>
+            Estoque:
+            <strong>
+              ${escapeHTML(formatQuantity(medication.stock_quantity))}
+              ${escapeHTML(medication.stock_unit || "unidades")}
+            </strong>
+          </div>
+
+          <div>${stockMessage(medication)}</div>
+
+          ${
+            medication.instructions
+              ? `<div>Orientações: ${
+                  escapeHTML(medication.instructions)
+                }</div>`
+              : ""
+          }
+        </div>
+
+        <div class="item-actions">
+          ${
+            medication.status !== "completed"
+              ? `
+                <button
+                  class="edit-button"
+                  data-action="edit"
+                  data-id="${escapeHTML(medication.id)}"
+                  type="button"
+                >Editar</button>
+
+                <button
+                  class="restock-button"
+                  data-action="restock"
+                  data-id="${escapeHTML(medication.id)}"
+                  type="button"
+                >＋ Adicionar estoque</button>
+              `
+              : ""
+          }
+
+          ${
+            medication.status === "active"
+              ? `
+                <button
+                  class="pause-button"
+                  data-action="pause"
+                  data-id="${escapeHTML(medication.id)}"
+                  type="button"
+                >Pausar</button>
+              `
+              : ""
+          }
+
+          ${
+            medication.status === "paused"
+              ? `
+                <button
+                  class="edit-button"
+                  data-action="activate"
+                  data-id="${escapeHTML(medication.id)}"
+                  type="button"
+                >Reativar</button>
+              `
+              : ""
+          }
+
+          ${
+            medication.status !== "completed"
+              ? `
+                <button
+                  class="complete-button"
+                  data-action="complete"
+                  data-id="${escapeHTML(medication.id)}"
+                  type="button"
+                >Concluir</button>
+              `
+              : ""
+          }
+        </div>
+      </article>
+    `;
+  }).join("");
+}
+
+/* ============================================================
+   EVENTOS DA INTERFACE
+   ============================================================ */
+
+function configureEvents() {
+  $("loginForm").addEventListener(
+    "submit",
+    handleLogin
+  );
+
+  $("registerForm").addEventListener(
+    "submit",
+    handleRegister
+  );
+
+  $("recoveryForm").addEventListener(
+    "submit",
+    handleRecovery
+  );
+
+  $("passwordResetForm").addEventListener(
+    "submit",
+    handlePasswordUpdate
+  );
+
+  $("showRegisterButton").addEventListener(
+    "click",
+    () => showAuthPanel("registerPanel")
+  );
+
+  $("showRecoveryButton").addEventListener(
+    "click",
+    () => {
+      $("recoveryEmail").value =
+        $("loginEmail").value.trim();
+
+      showAuthPanel("recoveryPanel");
+    }
+  );
+
+  $("backToLoginFromRegister").addEventListener(
+    "click",
+    () => showAuthPanel("loginPanel")
+  );
+
+  $("backToLoginFromRecovery").addEventListener(
+    "click",
+    () => showAuthPanel("loginPanel")
+  );
+
+  $("logoutButton").addEventListener(
+    "click",
+    logout
+  );
+
+  $("newMedicationButton").addEventListener(
+    "click",
+    openNewMedicationForm
+  );
+
+  $("cancelEditButton").addEventListener(
+    "click",
+    closeMedicationForm
+  );
+
+  $("addScheduleButton").addEventListener(
+    "click",
+    () => addScheduleRow()
+  );
+
+  $("medicationForm").addEventListener(
+    "submit",
+    saveMedication
+  );
+
+  $("cancelRestockButton").addEventListener(
+    "click",
+    () => closeRestockForm(true)
+  );
+
+  $("restockForm").addEventListener(
+    "submit",
+    saveRestock
+  );
+
+  $("todayMedicationList").addEventListener(
+    "click",
+    event => {
+      const button = event.target.closest("[data-action]");
+
+      if (!button) return;
+
+      if (button.dataset.action === "today-taken") {
+        markDoseTaken(
+          button.dataset.id,
+          button.dataset.time
+        );
+      } else if (
+        button.dataset.action === "today-not-taken"
+      ) {
+        markDoseNotTaken(
+          button.dataset.id,
+          button.dataset.time
+        );
+      }
+    }
+  );
+
+  $("medicationList").addEventListener(
+    "click",
+    event => {
+      const button = event.target.closest("[data-action]");
+
+      if (!button) return;
+
+      const { action, id } = button.dataset;
+
+      if (action === "edit") {
+        editMedication(id);
+      }
+
+      if (action === "restock") {
+        openRestockForm(id);
+      }
+
+      if (action === "pause") {
+        updateMedicationStatus(id, "paused");
+      }
+
+      if (action === "activate") {
+        updateMedicationStatus(id, "active");
+      }
+
+      if (action === "complete") {
+        updateMedicationStatus(id, "completed");
+      }
     }
   );
 }
 
-initializeApp();
+/* ============================================================
+   INICIALIZAÇÃO E RECUPERAÇÃO DE SESSÃO
+   ============================================================ */
+
+async function initializeApp() {
+  configureEvents();
+
+  /*
+    Primeiro registramos o observador de autenticação.
+    Assim, não perdemos o evento PASSWORD_RECOVERY.
+  */
+
+  supabaseClient.auth.onAuthStateChange(
+    (event, session) => {
+
+      if (event === "PASSWORD_RECOVERY") {
+        openPasswordResetScreen();
+        return;
+      }
+
+      if (
+        event === "SIGNED_IN" &&
+        session?.user &&
+        !passwordRecoveryInProgress
+      ) {
+        /*
+          Não abrir a área dos medicamentos enquanto
+          o formulário de recuperação estiver ativo.
+        */
+
+        if (!$("passwordResetPanel").classList.contains("hidden")) {
+          return;
+        }
+
+        showApplication(session.user);
+        return;
+      }
+
+      if (event === "SIGNED_OUT") {
+        currentUser = null;
+        medications = [];
+        schedulesByMedication = {};
+        applicationLoading = false;
+
+        $("appSection").classList.add("hidden");
+        $("authSection").classList.remove("hidden");
+        $("logoutButton").classList.add("hidden");
+
+        if (!passwordRecoveryInProgress) {
+          showAuthPanel("loginPanel");
+        }
+      }
+    }
+  );
+
+  /*
+    Verifica se a URL atual é um link de recuperação.
+    O evento PASSWORD_RECOVERY é a identificação principal;
+    este teste também ajuda a manter a tela correta durante
+    a abertura do link no navegador.
+  */
+
+  const urlParams = new URLSearchParams(
+    window.location.search
+  );
+
+  const hashParams = new URLSearchParams(
+    window.location.hash.replace(/^#/, "")
+  );
+
+  const recoveryInUrl =
+    urlParams.get("type") === "recovery" ||
+    hashParams.get("type") === "recovery";
+
+  if (recoveryInUrl) {
+    passwordRecoveryInProgress = true;
+    showAuthPanel("passwordResetPanel");
+  }
+
+  const {
+    data,
+    error
+  } = await supabaseClient.auth.getSession();
+
+  if (error) {
+    showMessage(
+      error.message || "Não foi possível verificar sua sessão.",
+      true
+    );
+    return;
+  }
+
+  /*
+    Se houver recuperação em andamento, não abrir o painel
+    principal, mesmo que o Supabase já tenha criado uma sessão.
+  */
+
+  if (passwordRecoveryInProgress) {
+    showAuthPanel("passwordResetPanel");
+    return;
+  }
+
+  if (
+    data.session?.user &&
+    $("passwordResetPanel").classList.contains("hidden")
+  ) {
+    await showApplication(data.session.user);
+  }
+}
+
+document.addEventListener(
+  "DOMContentLoaded",
+  initializeApp
+);
