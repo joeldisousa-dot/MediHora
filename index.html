@@ -1,1 +1,143 @@
 
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#101827">
+  <meta name="description" content="MediHora - Organização de medicamentos e horários.">
+  <title>MediHora | Seu cuidado em dia</title>
+  <link rel="manifest" href="./manifest.json">
+  <link rel="stylesheet" href="./style.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="./app.js" defer></script>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand"><span class="brand-icon">✚</span> MediHora</div>
+    <span class="brand-subtitle">Seu cuidado em dia</span>
+  </header>
+
+  <main class="container">
+    <section id="authSection" class="auth-card">
+      <div class="welcome">
+        <div class="large-icon">✚</div>
+        <h1>Bem-vindo ao MediHora</h1>
+        <p>Organize seus medicamentos e acompanhe seus horários.</p>
+      </div>
+
+      <div id="loginPanel">
+        <h2>Entrar na sua conta</h2>
+        <form id="loginForm">
+          <label for="loginEmail">E-mail</label>
+          <input id="loginEmail" type="email" required autocomplete="email" placeholder="seu@email.com">
+          <label for="loginPassword">Senha</label>
+          <input id="loginPassword" type="password" required autocomplete="current-password" placeholder="Sua senha">
+          <button class="primary-btn" type="submit">Entrar</button>
+        </form>
+        <button class="text-btn" id="showRegister">Criar minha conta</button>
+        <button class="text-btn" id="showRecovery">Esqueci minha senha</button>
+      </div>
+
+      <div id="registerPanel" class="hidden">
+        <h2>Criar conta</h2>
+        <form id="registerForm">
+          <label for="registerName">Nome</label>
+          <input id="registerName" type="text" required autocomplete="name" placeholder="Seu nome">
+          <label for="registerEmail">E-mail</label>
+          <input id="registerEmail" type="email" required autocomplete="email" placeholder="seu@email.com">
+          <label for="registerPassword">Senha</label>
+          <input id="registerPassword" type="password" required minlength="8" autocomplete="new-password" placeholder="Mínimo de 8 caracteres">
+          <button class="primary-btn" type="submit">Criar conta</button>
+        </form>
+        <button class="text-btn" id="backLogin1">Já tenho uma conta</button>
+      </div>
+
+      <div id="recoveryPanel" class="hidden">
+        <h2>Recuperar senha</h2>
+        <p>Informe seu e-mail para receber o link de recuperação.</p>
+        <form id="recoveryForm">
+          <label for="recoveryEmail">E-mail</label>
+          <input id="recoveryEmail" type="email" required placeholder="seu@email.com">
+          <button class="primary-btn" type="submit">Enviar link</button>
+        </form>
+        <button class="text-btn" id="backLogin2">Voltar ao login</button>
+      </div>
+
+      <div id="newPasswordPanel" class="hidden">
+        <h2>Definir nova senha</h2>
+        <form id="newPasswordForm">
+          <label for="newPassword">Nova senha</label>
+          <input id="newPassword" type="password" minlength="8" required autocomplete="new-password">
+          <button class="primary-btn" type="submit">Salvar nova senha</button>
+        </form>
+      </div>
+    </section>
+
+    <section id="appSection" class="hidden">
+      <div class="dashboard-heading">
+        <div>
+          <span class="eyebrow">ÁREA PESSOAL</span>
+          <h1>Olá, <span id="userName">usuário</span>!</h1>
+          <p>Gerencie seus medicamentos com organização.</p>
+        </div>
+        <button id="logoutBtn" class="outline-btn">Sair</button>
+      </div>
+
+      <div class="notice">
+        <strong>Importante:</strong> o MediHora é uma ferramenta de organização.
+        Siga sempre as orientações do profissional de saúde responsável pelo seu tratamento.
+      </div>
+
+      <section class="panel">
+        <h2>Adicionar medicamento</h2>
+        <form id="medicationForm" class="med-form">
+          <div class="form-grid">
+            <div>
+              <label for="medName">Nome do medicamento</label>
+              <input id="medName" required maxlength="120" placeholder="Ex.: Medicamento">
+            </div>
+            <div>
+              <label for="medDose">Dose prescrita</label>
+              <input id="medDose" required maxlength="100" placeholder="Conforme a prescrição">
+            </div>
+            <div>
+              <label for="medStart">Data de início</label>
+              <input id="medStart" type="date" required>
+            </div>
+            <div>
+              <label for="medDays">Duração prescrita (dias)</label>
+              <input id="medDays" type="number" min="1" max="3650" required placeholder="Ex.: 7">
+            </div>
+          </div>
+          <div>
+            <label for="medInstructions">Instruções (opcional)</label>
+            <textarea id="medInstructions" rows="3" maxlength="1000" placeholder="Orientações conforme a prescrição"></textarea>
+          </div>
+          <button class="primary-btn" type="submit">Salvar medicamento</button>
+        </form>
+      </section>
+
+      <section class="panel">
+        <div class="section-heading">
+          <div>
+            <h2>Meus medicamentos</h2>
+            <p>Somente os registros da sua conta são exibidos.</p>
+          </div>
+          <button id="refreshBtn" class="outline-btn">Atualizar</button>
+        </div>
+        <div id="medicationList" class="medication-list">
+          <p class="muted">Carregando...</p>
+        </div>
+      </section>
+    </section>
+
+    <div id="message" class="message hidden" role="status" aria-live="polite"></div>
+  </main>
+
+  <footer>
+    MediHora © 2026 · Organização e cuidado
+  </footer>
+</body>
+</html>
+
