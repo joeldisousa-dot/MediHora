@@ -1,13 +1,12 @@
 
 {
-  "name": "MediHora",
+  "name": "MediHora - Meu cuidado em dia",
   "short_name": "MediHora",
-  "description": "Organização de medicamentos e horários.",
+  "description": "Organize seus medicamentos e horários.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
-  "background_color": "#101827",
-  "theme_color": "#101827",
+  "background_color": "#f5f8f7",
+  "theme_color": "#168574",
   "lang": "pt-BR"
 }
-
