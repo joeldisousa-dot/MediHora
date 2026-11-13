@@ -20,6 +20,17 @@ const supabaseClient = window.supabase.createClient(
       autoRefreshToken: true
     }
   }
+);const supabaseClient = window.supabase.createClient(
+  SUPABASE_URL,
+  SUPABASE_KEY,
+  {
+    auth: {
+      flowType: "pkce",
+      detectSessionInUrl: true,
+      persistSession: true,
+      autoRefreshToken: true
+    }
+  }
 );
 
 let currentUser = null;
