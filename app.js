@@ -499,6 +499,7 @@ function isMedicationScheduledToday(medication) {
 
 function renderTodayMedications() {
   const container = $("todayMedicationList");
+  if (!container) return;
 
   const items = medications
     .filter(isMedicationScheduledToday)
@@ -525,38 +526,48 @@ function renderTodayMedications() {
     const doseCards = schedules.map(schedule => {
       const status = schedule.doseStatus || "pending";
       const time = cleanTime(schedule.scheduled_time);
-      const emoji = statusEmoji(status);
       const period = periodEmoji(time);
 
       const statusText = status === "taken"
-        ? "Tomado"
+        ? "MEDICAMENTO TOMADO"
         : status === "not_taken"
-          ? "Não tomado"
-          : "Aguardando registro";
+          ? "MEDICAMENTO NÃO TOMADO"
+          : "AGUARDANDO REGISTRO";
+
+      const statusIcon = status === "taken"
+        ? "💎"
+        : status === "not_taken"
+          ? "😟"
+          : "⏳";
 
       const stockInfo = status === "taken" ? `
         <div class="dose-stock-info">
-          <span>📦</span>
-          <span>Estoque restante:
-            <strong>${escapeHTML(currentStock)} ${escapeHTML(stockUnit)}</strong>
-          </span>
+          📦 Estoque restante:
+          <strong>${escapeHTML(currentStock)} ${escapeHTML(stockUnit)}</strong>
         </div>` : "";
 
       return `
         <div class="today-dose status-${escapeHTML(status)}">
+
           <div class="today-dose-heading">
             <span class="today-dose-time">
               ${period} Às ${escapeHTML(time)}
             </span>
-            <span class="today-dose-state">
-              ${emoji} ${statusText}
-            </span>
           </div>
 
-          <p>
+          <div class="today-dose-state state-${escapeHTML(status)}"
+               role="status"
+               aria-live="polite">
+            <span class="today-status-icon">${statusIcon}</span>
+            <span>${statusText}</span>
+          </div>
+
+          <p class="today-dose-quantity">
             Quantidade desta dose:
-            ${escapeHTML(formatQuantity(schedule.dose_quantity))}
-            ${escapeHTML(stockUnit)}
+            <strong>
+              ${escapeHTML(formatQuantity(schedule.dose_quantity))}
+              ${escapeHTML(stockUnit)}
+            </strong>
           </p>
 
           <div class="today-dose-actions">
@@ -567,7 +578,9 @@ function renderTodayMedications() {
               data-id="${escapeHTML(schedule.id)}"
               data-time="${escapeHTML(time)}"
               ${status === "taken" ? "disabled" : ""}
-            >Tomado</button>
+            >
+              💎 Tomado
+            </button>
 
             <button
               type="button"
@@ -576,7 +589,9 @@ function renderTodayMedications() {
               data-id="${escapeHTML(schedule.id)}"
               data-time="${escapeHTML(time)}"
               ${status === "taken" ? "disabled" : ""}
-            >Não tomado</button>
+            >
+              😟 Não tomado
+            </button>
           </div>
 
           ${stockInfo}
