@@ -7,14 +7,17 @@
   <meta name="theme-color" content="#f5f8f6">
   <meta name="description" content="MediHora - organização simples dos seus medicamentos.">
   <title>MediHora — Meu cuidado em dia</title>
+
   <link rel="manifest" href="./manifest.json">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="./style.css">
+
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="./app.js" defer></script>
 </head>
+
 <body>
   <header class="topbar">
     <a class="brand" href="./" aria-label="MediHora início">
@@ -25,15 +28,20 @@
   </header>
 
   <main class="page">
+
+    <!-- AUTENTICAÇÃO -->
     <section id="authSection" class="auth-card">
+
       <div class="auth-intro">
         <div class="large-icon">💊</div>
         <h1>Cuide da sua rotina com tranquilidade.</h1>
         <p>Organize seus medicamentos e acompanhe os horários de cada dia.</p>
       </div>
 
+      <!-- LOGIN -->
       <div id="loginPanel">
         <h2>Entrar na minha conta</h2>
+
         <form id="loginForm">
           <label for="loginEmail">E-mail</label>
           <input id="loginEmail" type="email" autocomplete="email" required placeholder="seuemail@exemplo.com">
@@ -43,12 +51,15 @@
 
           <button class="button button-primary full" type="submit">Entrar</button>
         </form>
+
         <button id="showRegisterButton" class="text-button" type="button">Criar uma conta</button>
         <button id="showRecoveryButton" class="text-button" type="button">Esqueci minha senha</button>
       </div>
 
+      <!-- CADASTRO -->
       <div id="registerPanel" class="hidden">
         <h2>Criar minha conta</h2>
+
         <form id="registerForm">
           <label for="registerName">Nome</label>
           <input id="registerName" type="text" autocomplete="name" required placeholder="Como podemos chamar você?">
@@ -61,17 +72,30 @@
 
           <button class="button button-primary full" type="submit">Criar conta</button>
         </form>
+
         <button id="backToLoginFromRegister" class="text-button" type="button">Voltar para entrar</button>
       </div>
 
+      <!-- SOLICITAR RECUPERAÇÃO -->
       <div id="recoveryPanel" class="hidden">
-        
-      <!-- NOVA SENHA: EXIBIDA AO CLICAR NO LINK DE RECUPERAÇÃO -->
+        <h2>Recuperar senha</h2>
+        <p class="muted">Informe seu e-mail para receber o link de recuperação.</p>
+
+        <form id="recoveryForm">
+          <label for="recoveryEmail">E-mail</label>
+          <input id="recoveryEmail" type="email" required placeholder="seuemail@exemplo.com">
+
+          <button class="button button-primary full" type="submit">Enviar link</button>
+        </form>
+
+        <button id="backToLoginFromRecovery" class="text-button" type="button">Voltar para entrar</button>
+      </div>
+
+      <!-- DEFINIR NOVA SENHA -->
       <div id="passwordResetPanel" class="hidden">
+        <div class="large-icon">🔐</div>
         <h2>Criar nova senha</h2>
-        <p class="muted">
-          Escolha uma nova senha para acessar sua conta do MediHora.
-        </p>
+        <p class="muted">Escolha uma nova senha para acessar sua conta do MediHora.</p>
 
         <form id="passwordResetForm">
           <label for="newPassword">Nova senha</label>
@@ -91,7 +115,7 @@
             autocomplete="new-password"
             minlength="6"
             required
-            placeholder="Digite novamente a senha"
+            placeholder="Digite novamente sua senha"
           >
 
           <button class="button button-primary full" type="submit">
@@ -100,52 +124,11 @@
         </form>
       </div>
 
-        <h2>Recuperar senha</h2>
-        <p class="muted">Informe seu e-mail para receber o link de recuperação.</p>
-
-        <form id="recoveryForm">
-          <label for="recoveryEmail">E-mail</label>
-          <input id="recoveryEmail" type="email" autocomplete="email" required placeholder="seuemail@exemplo.com">
-          <button class="button button-primary full" type="submit">Enviar link</button>
-        </form>
-
-        <button id="backToLoginFromRecovery" class="text-button" type="button">Voltar para entrar</button>
-      </div>
-
-      <!-- NOVA TELA PARA CADASTRAR A SENHA -->
-      <div id="passwordResetPanel" class="hidden">
-        <h2>Criar nova senha</h2>
-        <p class="muted">Digite e confirme sua nova senha para recuperar o acesso.</p>
-
-        <form id="passwordResetForm">
-          <label for="newPassword">Nova senha</label>
-          <input
-            id="newPassword"
-            type="password"
-            autocomplete="new-password"
-            minlength="6"
-            required
-            placeholder="Mínimo de 6 caracteres"
-          >
-
-          <label for="confirmNewPassword">Confirme a nova senha</label>
-          <input
-            id="confirmNewPassword"
-            type="password"
-            autocomplete="new-password"
-            minlength="6"
-            required
-            placeholder="Digite novamente a senha"
-          >
-
-          <button class="button button-primary full" type="submit">
-            Salvar nova senha
-          </button>
-        </form>
-      </div>
     </section>
 
+    <!-- APLICATIVO -->
     <section id="appSection" class="hidden">
+
       <section class="welcome">
         <div>
           <p class="eyebrow">ÁREA PESSOAL</p>
@@ -154,6 +137,7 @@
         </div>
       </section>
 
+      <!-- PAINEL DE HOJE -->
       <section class="today-section">
         <div class="section-heading">
           <div>
@@ -173,6 +157,7 @@
         </button>
       </section>
 
+      <!-- CADASTRO / EDIÇÃO -->
       <section class="panel form-panel hidden" id="medicationPanel">
         <div class="section-heading">
           <div>
@@ -212,7 +197,7 @@
             <div class="field">
               <label for="medicationStock">Estoque inicial</label>
               <input id="medicationStock" type="number" min="0" step="0.01" value="0">
-              <small class="field-help">Depois do cadastro, use o botão “Adicionar estoque” para repor.</small>
+              <small class="field-help">Depois do cadastro, use Adicionar estoque para repor.</small>
             </div>
 
             <div class="field">
@@ -248,6 +233,7 @@
         </form>
       </section>
 
+      <!-- LISTA GERAL -->
       <section class="panel medication-list-panel">
         <div class="section-heading">
           <div>
@@ -262,6 +248,7 @@
         </div>
       </section>
 
+      <!-- REPOSIÇÃO -->
       <section id="restockPanel" class="panel restock-panel hidden" aria-labelledby="restockTitle">
         <div class="section-heading">
           <div>
@@ -293,6 +280,7 @@
       <p class="disclaimer">
         O MediHora é uma ferramenta de organização. Siga sempre a prescrição e as orientações do profissional de saúde responsável pelo seu tratamento.
       </p>
+
     </section>
   </main>
 
