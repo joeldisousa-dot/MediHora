@@ -126,7 +126,7 @@ input:focus, select:focus, textarea:focus { border-color: var(--primary); box-sh
   .remove-schedule { grid-column: 1 / -1; }
   .today-dose-actions { grid-template-columns: 1fr 1fr; }
   .today-medication-card, .panel { padding: 15px; }
-  .topbar { padding-left: 14px; padding-right: 14px; }
+  .topbar { padding-left: 14px; padding-right: 14px; } 
 }
 @media (max-width: 360px) {
   .today-dose-actions { grid-template-columns: 1fr; }
