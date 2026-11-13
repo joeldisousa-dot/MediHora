@@ -633,3 +633,22 @@ input:focus, select:focus, textarea:focus {
     grid-template-columns: 1fr;
   }
 }
+
+/* ESTOQUE RESTANTE APÓS REGISTRAR DOSE */
+
+.dose-stock-info {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin-top: 12px;
+  padding: 11px 12px;
+  background: #ffffff;
+  border: 1px solid #9bd5ad;
+  border-radius: 10px;
+  color: #147343;
+  font-size: 13px;
+}
+
+.dose-stock-info strong {
+  font-weight: 900;
+}
