@@ -1,212 +1,202 @@
+
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="theme-color" content="#f5f8f6">
-  <meta name="description" content="MediHora - organização simples dos seus medicamentos.">
-  <title>MediHora — Meu cuidado em dia</title>
+  <meta name="theme-color" content="#168653">
+  <title>MediHora</title>
   <link rel="manifest" href="./manifest.json">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="./style.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="./app.js" defer></script>
 </head>
 <body>
   <header class="topbar">
-    <a class="brand" href="./" aria-label="MediHora início">
-      <span class="brand-icon">💊</span>
-      <span>MediHora</span>
-    </a>
+    <a class="brand" href="./">💊 MediHora</a>
     <button id="logoutButton" class="button button-light hidden" type="button">Sair</button>
   </header>
 
-  <main class="page">
+  <main class="container">
     <section id="authSection" class="auth-card">
-      <div class="auth-intro">
-        <div class="large-icon">💊</div>
-        <h1>Cuide da sua rotina com tranquilidade.</h1>
-        <p>Organize seus medicamentos e acompanhe os horários de cada dia.</p>
-      </div>
+      <div class="brand-large">💊</div>
+      <h1>Bem-vindo ao MediHora</h1>
+      <p class="muted">Organize seus medicamentos e horários com facilidade.</p>
 
       <div id="loginPanel">
-        <h2>Entrar na minha conta</h2>
+        <h2>Entrar na sua conta</h2>
         <form id="loginForm">
           <label for="loginEmail">E-mail</label>
-          <input id="loginEmail" type="email" autocomplete="email" required placeholder="seuemail@exemplo.com">
+          <input id="loginEmail" type="email" autocomplete="email" required placeholder="seu@email.com">
+
           <label for="loginPassword">Senha</label>
           <input id="loginPassword" type="password" autocomplete="current-password" required placeholder="Sua senha">
+
           <button class="button button-primary full" type="submit">Entrar</button>
         </form>
-        <button id="showRegisterButton" class="text-button" type="button">Criar uma conta</button>
-        <button id="showRecoveryButton" class="text-button" type="button">Esqueci minha senha</button>
+        <div class="auth-links">
+          <button id="showRegister" class="link-button" type="button">Criar minha conta</button>
+          <button id="showRecovery" class="link-button" type="button">Esqueci minha senha</button>
+        </div>
       </div>
 
       <div id="registerPanel" class="hidden">
-        <h2>Criar minha conta</h2>
+        <h2>Criar conta</h2>
         <form id="registerForm">
-          <label for="registerName">Nome</label>
-          <input id="registerName" type="text" autocomplete="name" required placeholder="Como podemos chamar você?">
+          <label for="registerName">Seu nome</label>
+          <input id="registerName" type="text" autocomplete="name" placeholder="Como podemos chamar você?">
+
           <label for="registerEmail">E-mail</label>
-          <input id="registerEmail" type="email" autocomplete="email" required placeholder="seuemail@exemplo.com">
+          <input id="registerEmail" type="email" autocomplete="email" required placeholder="seu@email.com">
+
           <label for="registerPassword">Senha</label>
-          <input id="registerPassword" type="password" autocomplete="new-password" minlength="6" required placeholder="Mínimo de 6 caracteres">
+          <input id="registerPassword" type="password" minlength="6" autocomplete="new-password" required placeholder="Mínimo de 6 caracteres">
+
           <button class="button button-primary full" type="submit">Criar conta</button>
         </form>
-        <button id="backToLoginFromRegister" class="text-button" type="button">Voltar para entrar</button>
+        <button id="backToLogin1" class="link-button" type="button">Voltar para entrar</button>
       </div>
 
       <div id="recoveryPanel" class="hidden">
         <h2>Recuperar senha</h2>
-        <p class="muted">Informe seu e-mail para receber o link de recuperação.</p>
         <form id="recoveryForm">
-          <label for="recoveryEmail">E-mail</label>
-          <input id="recoveryEmail" type="email" required placeholder="seuemail@exemplo.com">
-          <button class="button button-primary full" type="submit">Enviar link</button>
+          <label for="recoveryEmail">Seu e-mail</label>
+          <input id="recoveryEmail" type="email" required placeholder="seu@email.com">
+          <button class="button button-primary full" type="submit">Enviar link de recuperação</button>
         </form>
-        <button id="backToLoginFromRecovery" class="text-button" type="button">Voltar para entrar</button>
+        <button id="backToLogin2" class="link-button" type="button">Voltar para entrar</button>
       </div>
     </section>
 
     <section id="appSection" class="hidden">
-      <section class="welcome">
+      <div class="welcome">
         <div>
-          <p class="eyebrow">ÁREA PESSOAL</p>
-          <h1>Olá, <span id="userName">bem-vindo(a)</span>!</h1>
+          <span class="eyebrow">ÁREA PESSOAL</span>
+          <h1>Olá, <span id="userName">!</span></h1>
           <p class="muted">Acompanhe seus medicamentos de hoje.</p>
         </div>
-      </section>
+      </div>
 
-      <section class="today-section">
+      <section class="panel today-panel">
         <div class="section-heading">
           <div>
-            <p class="eyebrow">ACOMPANHAMENTO DIÁRIO</p>
             <h2>Remédios para hoje</h2>
-            <p id="todayDate" class="muted small-text"></p>
+            <p id="todayDate" class="muted"></p>
           </div>
-          <span class="today-icon">☀️</span>
+          <span id="todayCount" class="count-badge">0 doses</span>
         </div>
-        <div id="todayMedicationList" class="today-medication-list">
-          <div class="today-empty">Carregando seus horários...</div>
+        <div id="todayMedicationList" class="today-list">
+          <p class="muted">Carregando medicamentos...</p>
         </div>
-        <button id="newMedicationButton" class="button button-primary full add-medication-button" type="button">
-          + Adicionar novo medicamento
-        </button>
       </section>
 
-      <section class="panel form-panel hidden" id="medicationPanel">
+      <div class="main-actions">
+        <button id="newMedicationButton" class="button button-primary" type="button">
+          ＋ Adicionar novo medicamento
+        </button>
+      </div>
+
+      <section id="medicationPanel" class="panel hidden">
         <div class="section-heading">
-          <div>
-            <p class="eyebrow">CADASTRO</p>
-            <h2 id="formTitle">Novo medicamento</h2>
-            <p class="muted small-text">Preencha as informações do medicamento.</p>
-          </div>
+          <h2 id="medicationFormTitle">Novo medicamento</h2>
+          <button id="closeMedicationButton" class="icon-button" type="button" aria-label="Fechar">✕</button>
         </div>
 
         <form id="medicationForm">
-          <input type="hidden" id="medicationId">
+          <input id="medicationId" type="hidden">
+
+          <label for="medicationName">Nome do medicamento *</label>
+          <input id="medicationName" type="text" required placeholder="Ex.: Nome do medicamento">
+
           <div class="form-grid">
-            <div class="field field-full">
-              <label for="medicationName">Nome do medicamento *</label>
-              <input id="medicationName" type="text" maxlength="120" required placeholder="Ex.: Losartana">
+            <div>
+              <label for="medicationDose">Apresentação / dose</label>
+              <input id="medicationDose" type="text" placeholder="Ex.: 50 mg">
             </div>
-            <div class="field">
-              <label for="medicationDose">Dose ou apresentação *</label>
-              <input id="medicationDose" type="text" maxlength="100" required placeholder="Ex.: 50 mg">
-            </div>
-            <div class="field">
+            <div>
               <label for="medicationUnit">Unidade do estoque</label>
               <select id="medicationUnit">
                 <option value="comprimidos">Comprimidos</option>
                 <option value="cápsulas">Cápsulas</option>
-                <option value="gotas">Gotas</option>
                 <option value="ml">ml</option>
+                <option value="gotas">Gotas</option>
                 <option value="unidades">Unidades</option>
                 <option value="doses">Doses</option>
-                <option value="frascos">Frascos</option>
               </select>
-            </div>
-            <div class="field">
-              <label for="medicationStock">Estoque inicial</label>
-              <input id="medicationStock" type="number" min="0" step="0.01" value="0">
-              <small class="field-help">Depois do cadastro, use o botão “Adicionar estoque” para repor.</small>
-            </div>
-            <div class="field">
-              <label for="medicationStartDate">Início do tratamento *</label>
-              <input id="medicationStartDate" type="date" required>
-            </div>
-            <div class="field">
-              <label for="medicationDays">Duração prescrita (dias)</label>
-              <input id="medicationDays" type="number" min="1" step="1" placeholder="Ex.: 30">
-            </div>
-            <div class="field field-full">
-              <label for="medicationInstructions">Orientações pessoais</label>
-              <textarea id="medicationInstructions" rows="3" maxlength="500" placeholder="Anotações para ajudar na sua organização"></textarea>
             </div>
           </div>
 
-          <div class="schedule-header">
+          <div class="form-grid">
             <div>
-              <h3>Horários do medicamento</h3>
-              <p class="muted small-text">Informe o horário e a quantidade de cada dose.</p>
+              <label for="medicationStock">Estoque inicial</label>
+              <input id="medicationStock" type="number" min="0" step="0.01" value="0">
             </div>
-            <button id="addScheduleButton" class="button button-secondary" type="button">+ Horário</button>
+            <div>
+              <label for="medicationStartDate">Data de início</label>
+              <input id="medicationStartDate" type="date">
+            </div>
+          </div>
+
+          <label for="medicationDuration">Duração prescrita (dias)</label>
+          <input id="medicationDuration" type="number" min="1" placeholder="Deixe em branco se não houver prazo definido">
+
+          <label for="medicationInstructions">Orientações</label>
+          <textarea id="medicationInstructions" rows="3" placeholder="Orientações conforme a prescrição"></textarea>
+
+          <div class="schedule-heading">
+            <h3>Horários e quantidade por horário</h3>
+            <button id="addScheduleButton" class="button button-outline button-small" type="button">＋ Adicionar horário</button>
           </div>
           <div id="scheduleList" class="schedule-list"></div>
+
           <div class="form-actions">
-            <button class="button button-primary" type="submit" id="saveMedicationButton">Salvar medicamento</button>
-            <button class="button button-light" type="button" id="cancelEditButton">Cancelar</button>
+            <button class="button button-primary" type="submit">Salvar medicamento</button>
+            <button id="cancelMedicationButton" class="button button-light" type="button">Cancelar</button>
           </div>
         </form>
       </section>
 
-      <section class="panel medication-list-panel">
+      <section class="panel">
         <div class="section-heading">
           <div>
-            <p class="eyebrow">SUA ORGANIZAÇÃO</p>
             <h2>Meus medicamentos</h2>
+            <p class="muted">Consulte seus horários e estoques.</p>
           </div>
-          <span id="medicationCount" class="count-badge">0</span>
         </div>
         <div id="medicationList" class="medication-list">
-          <div class="empty-state">Carregando medicamentos...</div>
+          <p class="muted">Carregando...</p>
         </div>
       </section>
 
-      <!-- O formulário de estoque fica escondido até clicar no botão de um medicamento -->
-      <section id="restockPanel" class="panel restock-panel hidden" aria-labelledby="restockTitle">
+      <section id="restockPanel" class="panel hidden">
         <div class="section-heading">
-          <div>
-            <p class="eyebrow">CONTROLE DE ESTOQUE</p>
-            <h2 id="restockTitle">Adicionar estoque</h2>
-            <p id="restockMedicationName" class="muted small-text"></p>
-          </div>
-          <span class="today-icon">📦</span>
+          <h2>Adicionar estoque</h2>
+          <button id="closeRestockButton" class="icon-button" type="button" aria-label="Fechar">✕</button>
         </div>
+        <p id="restockMedicationName" class="muted"></p>
         <form id="restockForm">
-          <div class="field">
-            <label for="restockQuantity">Quantidade que deseja adicionar *</label>
-            <input id="restockQuantity" type="number" min="0.01" step="0.01" required placeholder="Ex.: 30">
-          </div>
-          <div class="field">
-            <label for="restockNote">Observação (opcional)</label>
-            <input id="restockNote" type="text" maxlength="200" placeholder="Ex.: Compra na farmácia">
-          </div>
+          <input id="restockMedicationId" type="hidden">
+          <label for="restockQuantity">Quantidade adicionada *</label>
+          <input id="restockQuantity" type="number" min="0.01" step="0.01" required placeholder="Ex.: 30">
+          <label for="restockNote">Observação</label>
+          <input id="restockNote" type="text" placeholder="Ex.: Compra na farmácia">
           <div class="form-actions">
-            <button id="saveRestockButton" class="button button-primary" type="submit">Salvar estoque</button>
+            <button class="button button-primary" type="submit">Confirmar reposição</button>
             <button id="cancelRestockButton" class="button button-light" type="button">Cancelar</button>
           </div>
         </form>
       </section>
 
       <p class="disclaimer">
-        O MediHora é uma ferramenta de organização. Siga sempre a prescrição e as orientações do profissional de saúde responsável pelo seu tratamento.
+        O MediHora é uma ferramenta de organização. Siga sempre as orientações
+        do profissional de saúde responsável pelo seu tratamento.
       </p>
     </section>
   </main>
 
-  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
 </body>
 </html>
