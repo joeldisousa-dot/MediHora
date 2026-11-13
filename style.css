@@ -72,3 +72,289 @@ button.hidden {
   color: #22c55e;
   font-weight: 900;
 }
+/* =========================================================
+   MEDIHORA - VISUAL APRIMORADO PARA NOTEBOOK E DESKTOP
+   ========================================================= */
+
+/* Área principal */
+.page {
+  width: min(1180px, calc(100% - 48px));
+  margin: 32px auto;
+}
+
+/* Boas-vindas */
+.welcome {
+  padding: 30px 34px;
+  margin-bottom: 28px;
+  border-radius: 20px;
+  background: linear-gradient(135deg, #ffffff, #eff8f2);
+  border: 1px solid #e2eee5;
+  box-shadow: 0 8px 28px rgba(20, 60, 35, 0.06);
+}
+
+.welcome h1 {
+  font-size: clamp(25px, 3vw, 34px);
+  margin: 8px 0;
+}
+
+/* Cabeçalho das seções */
+.today-section {
+  margin-bottom: 30px;
+}
+
+.section-heading {
+  margin-bottom: 22px;
+}
+
+/* Cartões dos medicamentos */
+.today-medication-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 22px;
+  align-items: stretch;
+}
+
+.today-medication-card {
+  min-width: 0;
+  padding: 23px;
+  border-radius: 19px;
+  background: #ffffff;
+  border: 1px solid #e5eee7;
+  box-shadow: 0 7px 24px rgba(20, 50, 30, 0.07);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.today-medication-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 30px rgba(20, 50, 30, 0.11);
+}
+
+/* Nome e apresentação */
+.today-medication-title {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  padding-bottom: 17px;
+  margin-bottom: 17px;
+  border-bottom: 1px solid #edf1ee;
+}
+
+.today-medication-icon {
+  width: 48px;
+  height: 48px;
+  flex: 0 0 48px;
+  display: grid;
+  place-items: center;
+  border-radius: 14px;
+  background: #edf8f0;
+  font-size: 25px;
+}
+
+.today-medication-title h3 {
+  margin: 0 0 4px;
+  font-size: 20px;
+  font-weight: 900;
+  color: #193b28;
+}
+
+.today-medication-title .medication-dose {
+  margin: 0;
+  color: #718078;
+  font-size: 14px;
+}
+
+/* Horários */
+.today-dose-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.today-dose {
+  padding: 15px;
+  border-radius: 13px;
+  background: #f7faf8;
+  border: 1px solid #e8efea;
+}
+
+.today-dose-heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 9px;
+  margin-bottom: 12px;
+}
+
+.today-dose-time {
+  font-size: 15px;
+  font-weight: 900;
+  color: #254b34;
+}
+
+.today-dose-state {
+  font-size: 12px;
+  font-weight: 800;
+  color: #68776e;
+}
+
+.today-dose-quantity {
+  margin: 0 0 13px;
+  color: #65736a;
+  font-size: 13px;
+}
+
+.today-dose-quantity strong {
+  color: #263d2e;
+}
+
+/* Botões de registro */
+.today-dose-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.today-dose-actions button {
+  min-height: 43px;
+  padding: 9px 12px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 900;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.button-taken {
+  background: #e7f7ec;
+  color: #16713a;
+  border: 1px solid #bce6c9;
+}
+
+.button-taken:hover,
+.button-taken.selected {
+  background: #198b48;
+  color: #ffffff;
+}
+
+.button-not-taken {
+  background: #fff0ed;
+  color: #bd4939;
+  border: 1px solid #f3c9c1;
+}
+
+.button-not-taken:hover,
+.button-not-taken.selected {
+  background: #d95343;
+  color: #ffffff;
+}
+
+.today-dose-actions button:disabled {
+  opacity: 0.75;
+  cursor: default;
+}
+
+/* Estoque sempre visível no rodapé do cartão */
+.today-stock-summary {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  margin-top: 17px;
+  padding: 14px 16px;
+  border-radius: 13px;
+  background: #edf8f0;
+  border: 1px solid #d7ecdd;
+}
+
+.today-stock-icon {
+  width: 40px;
+  height: 40px;
+  flex: 0 0 40px;
+  display: grid;
+  place-items: center;
+  border-radius: 11px;
+  background: #d9f0df;
+  font-size: 21px;
+}
+
+.today-stock-summary div {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.today-stock-label {
+  color: #64766a;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.today-stock-summary strong {
+  color: #168044;
+  font-size: 17px;
+  font-weight: 900;
+}
+
+/* Botão adicionar medicamento */
+.add-medication-button {
+  max-width: 420px;
+  min-height: 52px;
+  margin: 25px auto;
+  border-radius: 13px;
+  font-weight: 900;
+}
+
+/* Cartões e painéis gerais */
+.panel,
+.medication-list-panel {
+  border-radius: 18px;
+  box-shadow: 0 7px 24px rgba(20, 50, 30, 0.06);
+}
+
+/* Telas menores e tablets */
+@media (max-width: 760px) {
+  .page {
+    width: min(100% - 28px, 560px);
+    margin: 18px auto;
+  }
+
+  .welcome {
+    padding: 23px;
+  }
+
+  .today-medication-list {
+    grid-template-columns: 1fr;
+    gap: 15px;
+  }
+
+  .today-medication-card {
+    padding: 18px;
+  }
+}
+
+/* Celulares estreitos */
+@media (max-width: 420px) {
+  .today-dose-actions {
+    grid-template-columns: 1fr;
+  }
+
+  .today-dose-heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
+
+/* Notebook com tela menor */
+@media (min-width: 761px) and (max-width: 1050px) {
+  .page {
+    width: calc(100% - 36px);
+  }
+
+  .today-medication-list {
+    gap: 15px;
+  }
+
+  .today-medication-card {
+    padding: 17px;
+  }
+}
