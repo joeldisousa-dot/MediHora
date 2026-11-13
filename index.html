@@ -6,99 +6,494 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="theme-color" content="#f5f8f6">
   <meta name="description" content="MediHora - organização simples dos seus medicamentos.">
+
   <title>MediHora — Meu cuidado em dia</title>
 
   <link rel="manifest" href="./manifest.json">
+
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+  <link
+    href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800;900&display=swap"
+    rel="stylesheet"
+  >
+
   <link rel="stylesheet" href="./style.css">
 
+  <!-- Supabase: carregar somente uma vez -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <!-- Aplicação: carregar somente uma vez -->
   <script src="./app.js" defer></script>
+
+  <style>
+    [hidden],
+    .hidden {
+      display: none !important;
+    }
+
+    button,
+    input,
+    select,
+    textarea {
+      font: inherit;
+    }
+
+    button {
+      cursor: pointer;
+    }
+
+    button:disabled {
+      cursor: not-allowed;
+      opacity: .6;
+    }
+
+    input,
+    select,
+    textarea {
+      max-width: 100%;
+    }
+
+    .auth-card {
+      width: 100%;
+      max-width: 460px;
+      margin: 30px auto;
+    }
+
+    .auth-intro {
+      text-align: center;
+      margin-bottom: 28px;
+    }
+
+    .auth-intro .large-icon {
+      font-size: 42px;
+      margin-bottom: 12px;
+    }
+
+    .auth-intro h1 {
+      margin-bottom: 10px;
+    }
+
+    .auth-intro p {
+      line-height: 1.6;
+    }
+
+    .text-button {
+      display: block;
+      width: 100%;
+      border: 0;
+      background: transparent;
+      padding: 12px 8px;
+      color: #27865b;
+      font-weight: 800;
+      text-align: center;
+    }
+
+    .text-button:hover {
+      text-decoration: underline;
+    }
+
+    .auth-card form {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .auth-card form label {
+      margin-top: 8px;
+    }
+
+    .auth-card form button {
+      margin-top: 14px;
+    }
+
+    .page {
+      width: 100%;
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 15px;
+    }
+
+    .brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 9px;
+      text-decoration: none;
+      font-weight: 900;
+      font-size: 22px;
+      color: inherit;
+    }
+
+    .brand-icon {
+      font-size: 27px;
+    }
+
+    .welcome,
+    .today-section,
+    .panel {
+      margin-bottom: 22px;
+    }
+
+    .today-medication-list,
+    .medication-list {
+      display: grid;
+      gap: 14px;
+    }
+
+    .dose-card,
+    .medication-item {
+      min-width: 0;
+      overflow-wrap: anywhere;
+    }
+
+    .dose-top,
+    .section-heading {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .dose-actions,
+    .item-actions,
+    .form-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    .dose-actions button,
+    .item-actions button,
+    .form-actions button {
+      flex: 1 1 auto;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px;
+    }
+
+    .field {
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+    }
+
+    .field-full {
+      grid-column: 1 / -1;
+    }
+
+    .schedule-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin: 24px 0 14px;
+    }
+
+    .schedule-list {
+      display: grid;
+      gap: 12px;
+    }
+
+    .schedule-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: end;
+      gap: 12px;
+    }
+
+    .disclaimer {
+      margin: 28px 0;
+      padding: 14px;
+      border-radius: 12px;
+      font-size: 13px;
+      line-height: 1.6;
+      text-align: center;
+    }
+
+    .toast {
+      position: fixed;
+      z-index: 9999;
+      left: 50%;
+      bottom: 20px;
+      transform: translateX(-50%);
+      width: min(92%, 460px);
+      padding: 14px 18px;
+      border-radius: 12px;
+      background: #176b45;
+      color: #fff;
+      box-shadow: 0 5px 25px rgba(0,0,0,.18);
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity .2s ease;
+      text-align: center;
+    }
+
+    .toast.show {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .toast.error {
+      background: #b42318;
+    }
+
+    @media (max-width: 600px) {
+      .page {
+        padding: 14px;
+      }
+
+      .form-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .field-full {
+        grid-column: auto;
+      }
+
+      .dose-top {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .dose-actions {
+        flex-direction: column;
+      }
+
+      .dose-actions button {
+        width: 100%;
+      }
+
+      .form-actions {
+        flex-direction: column;
+      }
+
+      .form-actions button {
+        width: 100%;
+      }
+    }
+  </style>
 </head>
 
 <body>
+
+  <!-- CABEÇALHO -->
   <header class="topbar">
     <a class="brand" href="./" aria-label="MediHora início">
       <span class="brand-icon">💊</span>
       <span>MediHora</span>
     </a>
-    <button id="logoutButton" class="button button-light hidden" type="button">Sair</button>
+
+    <button
+      id="logoutButton"
+      class="button button-light hidden"
+      type="button"
+    >
+      Sair
+    </button>
   </header>
 
   <main class="page">
 
-    <!-- AUTENTICAÇÃO -->
+    <!-- =========================================
+         AUTENTICAÇÃO
+    ========================================== -->
     <section id="authSection" class="auth-card">
 
       <div class="auth-intro">
         <div class="large-icon">💊</div>
+
         <h1>Cuide da sua rotina com tranquilidade.</h1>
-        <p>Organize seus medicamentos e acompanhe os horários de cada dia.</p>
+
+        <p>
+          Organize seus medicamentos e acompanhe
+          os horários de cada dia.
+        </p>
       </div>
 
       <!-- LOGIN -->
       <div id="loginPanel">
+
         <h2>Entrar na minha conta</h2>
 
         <form id="loginForm">
+
           <label for="loginEmail">E-mail</label>
-          <input id="loginEmail" type="email" autocomplete="email" required placeholder="seuemail@exemplo.com">
+
+          <input
+            id="loginEmail"
+            type="email"
+            autocomplete="email"
+            required
+            placeholder="seuemail@exemplo.com"
+          >
 
           <label for="loginPassword">Senha</label>
-          <input id="loginPassword" type="password" autocomplete="current-password" required placeholder="Sua senha">
 
-          <button class="button button-primary full" type="submit">Entrar</button>
+          <input
+            id="loginPassword"
+            type="password"
+            autocomplete="current-password"
+            required
+            placeholder="Sua senha"
+          >
+
+          <button
+            class="button button-primary full"
+            type="submit"
+          >
+            Entrar
+          </button>
+
         </form>
 
-        <button id="showRegisterButton" class="text-button" type="button">Criar uma conta</button>
-        <button id="showRecoveryButton" class="text-button" type="button">Esqueci minha senha</button>
+        <button
+          id="showRegisterButton"
+          class="text-button"
+          type="button"
+        >
+          Criar uma conta
+        </button>
+
+        <button
+          id="showRecoveryButton"
+          class="text-button"
+          type="button"
+        >
+          Esqueci minha senha
+        </button>
+
       </div>
 
       <!-- CADASTRO -->
       <div id="registerPanel" class="hidden">
+
         <h2>Criar minha conta</h2>
 
         <form id="registerForm">
+
           <label for="registerName">Nome</label>
-          <input id="registerName" type="text" autocomplete="name" required placeholder="Como podemos chamar você?">
+
+          <input
+            id="registerName"
+            type="text"
+            autocomplete="name"
+            required
+            placeholder="Como podemos chamar você?"
+          >
 
           <label for="registerEmail">E-mail</label>
-          <input id="registerEmail" type="email" autocomplete="email" required placeholder="seuemail@exemplo.com">
+
+          <input
+            id="registerEmail"
+            type="email"
+            autocomplete="email"
+            required
+            placeholder="seuemail@exemplo.com"
+          >
 
           <label for="registerPassword">Senha</label>
-          <input id="registerPassword" type="password" autocomplete="new-password" minlength="6" required placeholder="Mínimo de 6 caracteres">
 
-          <button class="button button-primary full" type="submit">Criar conta</button>
+          <input
+            id="registerPassword"
+            type="password"
+            autocomplete="new-password"
+            minlength="6"
+            required
+            placeholder="Mínimo de 6 caracteres"
+          >
+
+          <button
+            class="button button-primary full"
+            type="submit"
+          >
+            Criar conta
+          </button>
+
         </form>
 
-        <button id="backToLoginFromRegister" class="text-button" type="button">Voltar para entrar</button>
+        <button
+          id="backToLoginFromRegister"
+          class="text-button"
+          type="button"
+        >
+          Voltar para entrar
+        </button>
+
       </div>
 
-      <!-- SOLICITAR RECUPERAÇÃO -->
+      <!-- RECUPERAR SENHA -->
       <div id="recoveryPanel" class="hidden">
+
+        <div class="large-icon">📩</div>
+
         <h2>Recuperar senha</h2>
-        <p class="muted">Informe seu e-mail para receber o link de recuperação.</p>
+
+        <p class="muted">
+          Informe seu e-mail para receber o link
+          de recuperação da senha.
+        </p>
 
         <form id="recoveryForm">
-          <label for="recoveryEmail">E-mail</label>
-          <input id="recoveryEmail" type="email" required placeholder="seuemail@exemplo.com">
 
-          <button class="button button-primary full" type="submit">Enviar link</button>
+          <label for="recoveryEmail">E-mail</label>
+
+          <input
+            id="recoveryEmail"
+            type="email"
+            autocomplete="email"
+            required
+            placeholder="seuemail@exemplo.com"
+          >
+
+          <button
+            class="button button-primary full"
+            type="submit"
+          >
+            Enviar link de recuperação
+          </button>
+
         </form>
 
-        <button id="backToLoginFromRecovery" class="text-button" type="button">Voltar para entrar</button>
+        <button
+          id="backToLoginFromRecovery"
+          class="text-button"
+          type="button"
+        >
+          Voltar para entrar
+        </button>
+
       </div>
 
       <!-- DEFINIR NOVA SENHA -->
       <div id="passwordResetPanel" class="hidden">
+
         <div class="large-icon">🔐</div>
+
         <h2>Criar nova senha</h2>
-        <p class="muted">Escolha uma nova senha para acessar sua conta do MediHora.</p>
+
+        <p class="muted">
+          Você chegou pelo link de recuperação.
+          Escolha uma nova senha para sua conta.
+        </p>
 
         <form id="passwordResetForm">
+
           <label for="newPassword">Nova senha</label>
+
           <input
             id="newPassword"
             type="password"
@@ -108,7 +503,10 @@
             placeholder="Digite sua nova senha"
           >
 
-          <label for="confirmNewPassword">Confirmar nova senha</label>
+          <label for="confirmNewPassword">
+            Confirmar nova senha
+          </label>
+
           <input
             id="confirmNewPassword"
             type="password"
@@ -118,172 +516,457 @@
             placeholder="Digite novamente sua senha"
           >
 
-          <button class="button button-primary full" type="submit">
+          <button
+            class="button button-primary full"
+            type="submit"
+          >
             Salvar nova senha
           </button>
+
         </form>
+
       </div>
 
     </section>
 
-    <!-- APLICATIVO -->
+
+    <!-- =========================================
+         ÁREA PRINCIPAL DO APLICATIVO
+    ========================================== -->
     <section id="appSection" class="hidden">
 
+      <!-- BOAS-VINDAS -->
       <section class="welcome">
+
         <div>
           <p class="eyebrow">ÁREA PESSOAL</p>
-          <h1>Olá, <span id="userName">bem-vindo(a)</span>!</h1>
-          <p class="muted">Acompanhe seus medicamentos de hoje.</p>
+
+          <h1>
+            Olá, <span id="userName">bem-vindo(a)</span>!
+          </h1>
+
+          <p class="muted">
+            Acompanhe seus medicamentos de hoje.
+          </p>
         </div>
+
       </section>
 
-      <!-- PAINEL DE HOJE -->
+
+      <!-- =======================================
+           REMÉDIOS PARA HOJE
+      ======================================== -->
       <section class="today-section">
+
         <div class="section-heading">
+
           <div>
             <p class="eyebrow">ACOMPANHAMENTO DIÁRIO</p>
+
             <h2>Remédios para hoje</h2>
-            <p id="todayDate" class="muted small-text"></p>
+
+            <p
+              id="todayDate"
+              class="muted small-text"
+            ></p>
           </div>
+
           <span class="today-icon">☀️</span>
+
         </div>
 
-        <div id="todayMedicationList" class="today-medication-list">
-          <div class="today-empty">Carregando seus horários...</div>
+        <div
+          id="todayMedicationList"
+          class="today-medication-list"
+        >
+          <div class="today-empty">
+            Carregando seus horários...
+          </div>
         </div>
 
-        <button id="newMedicationButton" class="button button-primary full add-medication-button" type="button">
-          + Adicionar novo medicamento
+        <button
+          id="newMedicationButton"
+          class="button button-primary full add-medication-button"
+          type="button"
+        >
+          ＋ Adicionar novo medicamento
         </button>
+
       </section>
 
-      <!-- CADASTRO / EDIÇÃO -->
-      <section class="panel form-panel hidden" id="medicationPanel">
+
+      <!-- =======================================
+           CADASTRAR / EDITAR MEDICAMENTO
+           FICA ESCONDIDO ATÉ CLICAR NO BOTÃO
+      ======================================== -->
+      <section
+        class="panel form-panel hidden"
+        id="medicationPanel"
+      >
+
         <div class="section-heading">
+
           <div>
             <p class="eyebrow">CADASTRO</p>
+
             <h2 id="formTitle">Novo medicamento</h2>
-            <p class="muted small-text">Preencha as informações do medicamento.</p>
+
+            <p class="muted small-text">
+              Preencha as informações do medicamento.
+            </p>
           </div>
+
         </div>
 
         <form id="medicationForm">
-          <input type="hidden" id="medicationId">
+
+          <input
+            type="hidden"
+            id="medicationId"
+          >
 
           <div class="form-grid">
+
+            <!-- NOME -->
             <div class="field field-full">
-              <label for="medicationName">Nome do medicamento *</label>
-              <input id="medicationName" type="text" maxlength="120" required placeholder="Ex.: Losartana">
+
+              <label for="medicationName">
+                Nome do medicamento *
+              </label>
+
+              <input
+                id="medicationName"
+                type="text"
+                maxlength="120"
+                required
+                placeholder="Ex.: Losartana"
+              >
+
             </div>
 
+            <!-- DOSE -->
             <div class="field">
-              <label for="medicationDose">Dose ou apresentação *</label>
-              <input id="medicationDose" type="text" maxlength="100" required placeholder="Ex.: 50 mg">
+
+              <label for="medicationDose">
+                Dose ou apresentação *
+              </label>
+
+              <input
+                id="medicationDose"
+                type="text"
+                maxlength="100"
+                required
+                placeholder="Ex.: 50 mg"
+              >
+
             </div>
 
+            <!-- UNIDADE -->
             <div class="field">
-              <label for="medicationUnit">Unidade do estoque</label>
+
+              <label for="medicationUnit">
+                Unidade do estoque
+              </label>
+
               <select id="medicationUnit">
-                <option value="comprimidos">Comprimidos</option>
-                <option value="cápsulas">Cápsulas</option>
-                <option value="gotas">Gotas</option>
-                <option value="ml">ml</option>
-                <option value="unidades">Unidades</option>
-                <option value="doses">Doses</option>
-                <option value="frascos">Frascos</option>
+
+                <option value="comprimidos">
+                  Comprimidos
+                </option>
+
+                <option value="cápsulas">
+                  Cápsulas
+                </option>
+
+                <option value="gotas">
+                  Gotas
+                </option>
+
+                <option value="ml">
+                  ml
+                </option>
+
+                <option value="unidades">
+                  Unidades
+                </option>
+
+                <option value="doses">
+                  Doses
+                </option>
+
+                <option value="frascos">
+                  Frascos
+                </option>
+
               </select>
+
             </div>
 
+            <!-- ESTOQUE -->
             <div class="field">
-              <label for="medicationStock">Estoque inicial</label>
-              <input id="medicationStock" type="number" min="0" step="0.01" value="0">
-              <small class="field-help">Depois do cadastro, use Adicionar estoque para repor.</small>
+
+              <label for="medicationStock">
+                Estoque inicial
+              </label>
+
+              <input
+                id="medicationStock"
+                type="number"
+                min="0"
+                step="0.01"
+                value="0"
+              >
+
+              <small class="field-help">
+                Informe quanto você tem disponível.
+              </small>
+
             </div>
 
+            <!-- INÍCIO -->
             <div class="field">
-              <label for="medicationStartDate">Início do tratamento *</label>
-              <input id="medicationStartDate" type="date" required>
+
+              <label for="medicationStartDate">
+                Início do tratamento *
+              </label>
+
+              <input
+                id="medicationStartDate"
+                type="date"
+                required
+              >
+
             </div>
 
+            <!-- DURAÇÃO -->
             <div class="field">
-              <label for="medicationDays">Duração prescrita (dias)</label>
-              <input id="medicationDays" type="number" min="1" step="1" placeholder="Ex.: 30">
+
+              <label for="medicationDays">
+                Duração prescrita (dias)
+              </label>
+
+              <input
+                id="medicationDays"
+                type="number"
+                min="1"
+                step="1"
+                placeholder="Ex.: 30"
+              >
+
             </div>
 
+            <!-- ORIENTAÇÕES -->
             <div class="field field-full">
-              <label for="medicationInstructions">Orientações pessoais</label>
-              <textarea id="medicationInstructions" rows="3" maxlength="500" placeholder="Anotações para ajudar na sua organização"></textarea>
+
+              <label for="medicationInstructions">
+                Orientações pessoais
+              </label>
+
+              <textarea
+                id="medicationInstructions"
+                rows="3"
+                maxlength="500"
+                placeholder="Anotações para ajudar na sua organização"
+              ></textarea>
+
             </div>
+
           </div>
 
+
+          <!-- HORÁRIOS -->
           <div class="schedule-header">
+
             <div>
               <h3>Horários do medicamento</h3>
-              <p class="muted small-text">Informe o horário e a quantidade de cada dose.</p>
+
+              <p class="muted small-text">
+                Informe o horário e a quantidade de cada dose.
+              </p>
             </div>
-            <button id="addScheduleButton" class="button button-secondary" type="button">+ Horário</button>
+
+            <button
+              id="addScheduleButton"
+              class="button button-secondary"
+              type="button"
+            >
+              ＋ Horário
+            </button>
+
           </div>
 
-          <div id="scheduleList" class="schedule-list"></div>
+          <div
+            id="scheduleList"
+            class="schedule-list"
+          ></div>
 
+
+          <!-- BOTÕES DO FORMULÁRIO -->
           <div class="form-actions">
-            <button class="button button-primary" type="submit" id="saveMedicationButton">Salvar medicamento</button>
-            <button class="button button-light" type="button" id="cancelEditButton">Cancelar</button>
+
+            <button
+              class="button button-primary"
+              type="submit"
+              id="saveMedicationButton"
+            >
+              Salvar medicamento
+            </button>
+
+            <button
+              class="button button-light"
+              type="button"
+              id="cancelEditButton"
+            >
+              Cancelar
+            </button>
+
           </div>
+
         </form>
+
       </section>
 
-      <!-- LISTA GERAL -->
+
+      <!-- =======================================
+           MEUS MEDICAMENTOS
+      ======================================== -->
       <section class="panel medication-list-panel">
+
         <div class="section-heading">
+
           <div>
             <p class="eyebrow">SUA ORGANIZAÇÃO</p>
+
             <h2>Meus medicamentos</h2>
           </div>
-          <span id="medicationCount" class="count-badge">0</span>
+
+          <span
+            id="medicationCount"
+            class="count-badge"
+          >
+            0
+          </span>
+
         </div>
 
-        <div id="medicationList" class="medication-list">
-          <div class="empty-state">Carregando medicamentos...</div>
+        <div
+          id="medicationList"
+          class="medication-list"
+        >
+          <div class="empty-state">
+            Carregando medicamentos...
+          </div>
         </div>
+
       </section>
 
-      <!-- REPOSIÇÃO -->
-      <section id="restockPanel" class="panel restock-panel hidden" aria-labelledby="restockTitle">
+
+      <!-- =======================================
+           REPOSIÇÃO DE ESTOQUE
+      ======================================== -->
+      <section
+        id="restockPanel"
+        class="panel restock-panel hidden"
+        aria-labelledby="restockTitle"
+      >
+
         <div class="section-heading">
+
           <div>
             <p class="eyebrow">CONTROLE DE ESTOQUE</p>
-            <h2 id="restockTitle">Adicionar estoque</h2>
-            <p id="restockMedicationName" class="muted small-text"></p>
+
+            <h2 id="restockTitle">
+              Adicionar estoque
+            </h2>
+
+            <p
+              id="restockMedicationName"
+              class="muted small-text"
+            ></p>
           </div>
+
           <span class="today-icon">📦</span>
+
         </div>
 
         <form id="restockForm">
+
           <div class="field">
-            <label for="restockQuantity">Quantidade que deseja adicionar *</label>
-            <input id="restockQuantity" type="number" min="0.01" step="0.01" required placeholder="Ex.: 30">
+
+            <label for="restockQuantity">
+              Quantidade que deseja adicionar *
+            </label>
+
+            <input
+              id="restockQuantity"
+              type="number"
+              min="0.01"
+              step="0.01"
+              required
+              placeholder="Ex.: 30"
+            >
+
           </div>
 
           <div class="field">
-            <label for="restockNote">Observação (opcional)</label>
-            <input id="restockNote" type="text" maxlength="200" placeholder="Ex.: Compra na farmácia">
+
+            <label for="restockNote">
+              Observação (opcional)
+            </label>
+
+            <input
+              id="restockNote"
+              type="text"
+              maxlength="200"
+              placeholder="Ex.: Compra na farmácia"
+            >
+
           </div>
 
           <div class="form-actions">
-            <button id="saveRestockButton" class="button button-primary" type="submit">Salvar estoque</button>
-            <button id="cancelRestockButton" class="button button-light" type="button">Cancelar</button>
+
+            <button
+              id="saveRestockButton"
+              class="button button-primary"
+              type="submit"
+            >
+              Salvar estoque
+            </button>
+
+            <button
+              id="cancelRestockButton"
+              class="button button-light"
+              type="button"
+            >
+              Cancelar
+            </button>
+
           </div>
+
         </form>
+
       </section>
 
+
+      <!-- AVISO -->
       <p class="disclaimer">
-        O MediHora é uma ferramenta de organização. Siga sempre a prescrição e as orientações do profissional de saúde responsável pelo seu tratamento.
+        O MediHora é uma ferramenta de organização.
+        Siga sempre a prescrição e as orientações do
+        profissional de saúde responsável pelo seu tratamento.
       </p>
 
     </section>
+
   </main>
 
-  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <!-- MENSAGENS DO SISTEMA -->
+  <div
+    id="toast"
+    class="toast"
+    role="status"
+    aria-live="polite"
+  ></div>
+
 </body>
 </html>
