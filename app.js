@@ -499,7 +499,6 @@ function isMedicationScheduledToday(medication) {
 
 function renderTodayMedications() {
   const container = $("todayMedicationList");
-  if (!container) return;
 
   const items = medications
     .filter(isMedicationScheduledToday)
@@ -526,25 +525,14 @@ function renderTodayMedications() {
     const doseCards = schedules.map(schedule => {
       const status = schedule.doseStatus || "pending";
       const time = cleanTime(schedule.scheduled_time);
+      const emoji = statusEmoji(status);
       const period = periodEmoji(time);
 
       const statusText = status === "taken"
-        ? "MEDICAMENTO TOMADO"
+        ? "Medicamento tomado"
         : status === "not_taken"
-          ? "MEDICAMENTO NÃO TOMADO"
-          : "AGUARDANDO REGISTRO";
-
-      const statusIcon = status === "taken"
-        ? "💎"
-        : status === "not_taken"
-          ? "😟"
-          : "⏳";
-
-      const stockInfo = status === "taken" ? `
-        <div class="dose-stock-info">
-          📦 Estoque restante:
-          <strong>${escapeHTML(currentStock)} ${escapeHTML(stockUnit)}</strong>
-        </div>` : "";
+          ? "Medicamento não tomado"
+          : "Aguardando registro";
 
       return `
         <div class="today-dose status-${escapeHTML(status)}">
@@ -553,13 +541,10 @@ function renderTodayMedications() {
             <span class="today-dose-time">
               ${period} Às ${escapeHTML(time)}
             </span>
-          </div>
 
-          <div class="today-dose-state state-${escapeHTML(status)}"
-               role="status"
-               aria-live="polite">
-            <span class="today-status-icon">${statusIcon}</span>
-            <span>${statusText}</span>
+            <span class="today-dose-state">
+              ${emoji} ${statusText}
+            </span>
           </div>
 
           <p class="today-dose-quantity">
@@ -578,9 +563,7 @@ function renderTodayMedications() {
               data-id="${escapeHTML(schedule.id)}"
               data-time="${escapeHTML(time)}"
               ${status === "taken" ? "disabled" : ""}
-            >
-              💎 Tomado
-            </button>
+            >💎 Tomado</button>
 
             <button
               type="button"
@@ -589,20 +572,42 @@ function renderTodayMedications() {
               data-id="${escapeHTML(schedule.id)}"
               data-time="${escapeHTML(time)}"
               ${status === "taken" ? "disabled" : ""}
-            >
-              😟 Não tomado
-            </button>
+            >😟 Não tomado</button>
           </div>
 
-          ${stockInfo}
         </div>`;
     }).join("");
 
     return `
       <article class="today-medication-card">
-        <h3>${escapeHTML(medication.name)}</h3>
-        <p class="medication-dose">${escapeHTML(medication.dose)}</p>
-        ${doseCards}
+
+        <div class="today-medication-title">
+          <div class="today-medication-icon">💊</div>
+
+          <div>
+            <h3>${escapeHTML(medication.name)}</h3>
+            <p class="medication-dose">
+              ${escapeHTML(medication.dose)}
+            </p>
+          </div>
+        </div>
+
+        <div class="today-dose-list">
+          ${doseCards}
+        </div>
+
+        <div class="today-stock-summary">
+          <span class="today-stock-icon">📦</span>
+
+          <div>
+            <span class="today-stock-label">Quantidade disponível</span>
+            <strong>
+              ${escapeHTML(currentStock)}
+              ${escapeHTML(stockUnit)}
+            </strong>
+          </div>
+        </div>
+
       </article>`;
   }).join("");
 }
