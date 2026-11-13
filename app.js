@@ -57,7 +57,91 @@ function nextDate(dateString) {
     String(date.getUTCDate()).padStart(2, "0")
   ].join("-");
 }
+let restockMedicationId = null;
 
+function openRestockForm(medicationId) {
+    const medication = medications.find(
+        item => item.id === medicationId
+    );
+
+    if (!medication) {
+        alert("Medicamento não encontrado.");
+        return;
+    }
+
+    restockMedicationId = medicationId;
+
+    $("restockMedicationName").textContent =
+        "Medicamento: " + medication.name;
+
+    $("restockQuantity").value = "";
+    $("restockNote").value = "";
+
+    $("restockPanel").classList.remove("hidden");
+
+    $("restockPanel").scrollIntoView({
+        behavior: "smooth",
+        block: "center"
+    });
+
+    $("restockQuantity").focus();
+}
+
+function closeRestockForm() {
+    $("restockPanel").classList.add("hidden");
+    $("restockForm").reset();
+    restockMedicationId = null;
+}
+
+$("cancelRestockButton").addEventListener("click", () => {
+    closeRestockForm();
+});
+
+$("restockForm").addEventListener("submit", async (event) => {
+    event.preventDefault();
+
+    if (!restockMedicationId) return;
+
+    const quantity = Number($("restockQuantity").value);
+    const note = $("restockNote").value.trim() ||
+        "Reposição de estoque";
+
+    if (!Number.isFinite(quantity) || quantity <= 0) {
+        alert("Informe uma quantidade válida.");
+        return;
+    }
+
+    const button = $("saveRestockButton");
+    button.disabled = true;
+    button.textContent = "Salvando...";
+
+    try {
+        const { error } = await supabaseClient.rpc(
+            "restock_medication",
+            {
+                p_medication_id: restockMedicationId,
+                p_quantity: quantity,
+                p_note: note
+            }
+        );
+
+        if (error) throw error;
+
+        closeRestockForm();
+
+        await loadMedications();
+
+        alert("Estoque atualizado com sucesso!");
+
+    } catch (error) {
+        console.error(error);
+        alert("Não foi possível atualizar o estoque: " + error.message);
+
+    } finally {
+        button.disabled = false;
+        button.textContent = "Salvar estoque";
+    }
+});
 function formatDate(dateString) {
   if (!dateString) return "";
 
