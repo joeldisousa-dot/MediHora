@@ -13,7 +13,9 @@
   --shadow: 0 8px 28px rgba(30, 70, 60, .06);
 }
 
-* { box-sizing: border-box; }
+* {
+  box-sizing: border-box;
+}
 
 body {
   margin: 0;
@@ -24,7 +26,28 @@ body {
   line-height: 1.5;
 }
 
-button, input, textarea { font: inherit; }
+button, input, textarea, select {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+  border: 0;
+  border-radius: 12px;
+  padding: 12px 17px;
+  font-weight: 700;
+  transition: background .15s ease, transform .15s ease;
+}
+
+button:active {
+  transform: scale(.98);
+}
+
+button:disabled {
+  opacity: .65;
+  cursor: not-allowed;
+  transform: none;
+}
 
 .container {
   width: min(100% - 30px, 850px);
@@ -32,7 +55,11 @@ button, input, textarea { font: inherit; }
   padding: 28px 0 50px;
 }
 
-.hidden { display: none !important; }
+.hidden {
+  display: none !important;
+}
+
+/* MARCA */
 
 .brand {
   text-align: center;
@@ -58,7 +85,12 @@ button, input, textarea { font: inherit; }
   color: var(--primary-dark);
 }
 
-.brand p, .muted { color: var(--muted); }
+.brand p,
+.muted {
+  color: var(--muted);
+}
+
+/* PAINÉIS */
 
 .panel {
   background: var(--surface);
@@ -73,8 +105,16 @@ button, input, textarea { font: inherit; }
   margin: 0 auto 30px;
 }
 
-h2 { margin: 0; font-size: 23px; }
-h1 { line-height: 1.2; }
+h1, h2, h3 {
+  line-height: 1.25;
+}
+
+h2 {
+  margin: 0;
+  font-size: 23px;
+}
+
+/* FORMULÁRIOS */
 
 label {
   display: block;
@@ -83,47 +123,49 @@ label {
   font-size: 14px;
 }
 
-input, textarea {
+input,
+textarea,
+select {
   display: block;
   width: 100%;
+  min-height: 46px;
   border: 1px solid var(--border);
   border-radius: 12px;
-  padding: 13px 14px;
+  padding: 12px 14px;
   background: #fbfdfc;
   color: var(--text);
   outline: none;
 }
 
-input:focus, textarea:focus {
+textarea {
+  resize: vertical;
+}
+
+input:focus,
+textarea:focus,
+select:focus {
   border-color: var(--primary);
   box-shadow: 0 0 0 3px rgba(22, 139, 120, .10);
 }
-
-textarea { resize: vertical; }
-
-button {
-  cursor: pointer;
-  border: 0;
-  border-radius: 12px;
-  padding: 12px 17px;
-  font-weight: 700;
-  transition: .15s ease;
-}
-
-button:disabled { opacity: .6; cursor: wait; }
 
 .primary {
   background: var(--primary);
   color: white;
 }
-.primary:hover { background: var(--primary-dark); }
+
+.primary:hover {
+  background: var(--primary-dark);
+}
 
 .secondary {
   background: var(--green-soft);
   color: var(--primary-dark);
 }
 
-.full { width: 100%; margin-top: 20px; }
+.full {
+  width: 100%;
+  margin-top: 20px;
+}
 
 .link-button {
   display: block;
@@ -132,6 +174,8 @@ button:disabled { opacity: .6; cursor: wait; }
   margin: 12px auto 0;
   padding: 7px;
 }
+
+/* CABEÇALHO */
 
 .topbar {
   display: flex;
@@ -155,11 +199,23 @@ button:disabled { opacity: .6; cursor: wait; }
   font-size: 22px;
 }
 
-.small-button { padding: 9px 17px; }
+.small-button {
+  padding: 9px 17px;
+}
 
-.welcome { margin-bottom: 24px; }
-.welcome h1 { font-size: 31px; margin: 5px 0; }
-.welcome p:last-child { color: var(--muted); margin-top: 5px; }
+.welcome {
+  margin-bottom: 24px;
+}
+
+.welcome h1 {
+  font-size: 31px;
+  margin: 5px 0;
+}
+
+.welcome p:last-child {
+  color: var(--muted);
+  margin-top: 5px;
+}
 
 .eyebrow {
   color: var(--primary);
@@ -168,6 +224,8 @@ button:disabled { opacity: .6; cursor: wait; }
   letter-spacing: 1.4px;
   margin: 0 0 7px;
 }
+
+/* RESUMO */
 
 .summary-grid {
   display: grid;
@@ -194,6 +252,8 @@ button:disabled { opacity: .6; cursor: wait; }
   font-weight: 800;
 }
 
+/* TÍTULOS DE SEÇÃO */
+
 .section-heading {
   display: flex;
   align-items: center;
@@ -213,13 +273,66 @@ button:disabled { opacity: .6; cursor: wait; }
   font-size: 27px;
 }
 
-.form-panel { margin-bottom: 35px; }
-
-.two-columns {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 14px;
+.form-panel {
+  margin-bottom: 35px;
 }
+
+/* ESTOQUE */
+
+.stock-fields {
+  margin-top: 22px;
+  padding: 17px;
+  border: 1px solid var(--border);
+  border-radius: 15px;
+  background: #f8fbfa;
+}
+
+.stock-fields h3 {
+  margin: 0;
+  font-size: 17px;
+}
+
+.stock-fields .small-text {
+  margin: 5px 0;
+}
+
+.stock-box {
+  margin-top: 15px;
+  padding: 14px;
+  border-radius: 13px;
+  background: var(--green-soft);
+  color: var(--primary-dark);
+}
+
+.stock-box p {
+  margin: 5px 0;
+  font-size: 13px;
+}
+
+.stock-normal {
+  background: var(--green-soft);
+  color: #14745f;
+}
+
+.stock-warning {
+  background: var(--yellow-soft);
+  color: #886515;
+}
+
+.stock-empty {
+  background: var(--red-soft);
+  color: #a34843;
+}
+
+.stock-replenish {
+  margin-top: 9px;
+  background: white;
+  color: var(--primary-dark);
+  border: 1px solid var(--border);
+  font-size: 12px;
+}
+
+/* HORÁRIOS */
 
 .schedule-heading {
   display: flex;
@@ -229,9 +342,14 @@ button:disabled { opacity: .6; cursor: wait; }
   margin-top: 20px;
 }
 
-.schedule-heading label { margin-top: 0; }
+.schedule-heading label {
+  margin-top: 0;
+}
 
-.small-text { font-size: 13px; margin: 0; }
+.small-text {
+  font-size: 13px;
+  margin: 0;
+}
 
 .add-time-button {
   background: var(--green-soft);
@@ -247,9 +365,10 @@ button:disabled { opacity: .6; cursor: wait; }
 }
 
 .time-row {
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(100px, 1fr) minmax(75px, 100px) auto auto;
   align-items: center;
-  gap: 10px;
+  gap: 9px;
   background: #f8fbfa;
   border: 1px solid var(--border);
   border-radius: 12px;
@@ -257,28 +376,32 @@ button:disabled { opacity: .6; cursor: wait; }
 }
 
 .time-row input {
-  max-width: 180px;
-  border: 0;
-  background: transparent;
-  box-shadow: none;
+  min-width: 0;
+  padding: 9px;
+  min-height: 40px;
 }
 
-.time-row span {
+.time-unit {
   color: var(--muted);
-  font-size: 13px;
-  flex: 1;
+  font-size: 12px;
 }
 
 .remove-time {
   color: #a34843;
   background: var(--red-soft);
-  padding: 8px 12px;
+  padding: 8px 10px;
+  font-size: 12px;
 }
 
-.form-actions { margin-top: 8px; }
+.form-actions {
+  margin-top: 8px;
+}
 
-.medications-section { margin-bottom: 35px; }
-.list-heading { margin-bottom: 15px; }
+/* LISTA E FILTROS */
+
+.medications-section {
+  margin-bottom: 35px;
+}
 
 .filters {
   display: flex;
@@ -324,7 +447,10 @@ button:disabled { opacity: .6; cursor: wait; }
   font-size: 19px;
 }
 
-.medication-dose { color: var(--muted); margin: 0; }
+.medication-dose {
+  color: var(--muted);
+  margin: 0;
+}
 
 .status {
   display: inline-block;
@@ -335,9 +461,22 @@ button:disabled { opacity: .6; cursor: wait; }
   white-space: nowrap;
 }
 
-.status-active { background: var(--green-soft); color: #14745f; }
-.status-paused { background: var(--yellow-soft); color: #946c18; }
-.status-completed { background: #edf0f2; color: #65727a; }
+.status-active {
+  background: var(--green-soft);
+  color: #14745f;
+}
+
+.status-paused {
+  background: var(--yellow-soft);
+  color: #946c18;
+}
+
+.status-completed {
+  background: #edf0f2;
+  color: #65727a;
+}
+
+/* DOSES */
 
 .card-details {
   margin-top: 14px;
@@ -347,7 +486,51 @@ button:disabled { opacity: .6; cursor: wait; }
   font-size: 14px;
 }
 
-.card-details p { margin: 5px 0; }
+.card-details p {
+  margin: 7px 0;
+}
+
+.dose-list {
+  display: grid;
+  gap: 8px;
+  margin: 10px 0;
+}
+
+.dose-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 9px 10px;
+  border-radius: 10px;
+  background: #f8fbfa;
+}
+
+.dose-row span {
+  color: var(--text);
+  font-weight: 600;
+  font-size: 13px;
+}
+
+.dose-button {
+  background: var(--primary);
+  color: white;
+  padding: 8px 12px;
+  font-size: 12px;
+}
+
+.dose-button.dose-taken {
+  background: var(--green-soft);
+  color: var(--primary-dark);
+}
+
+.dose-button:disabled {
+  opacity: 1;
+  cursor: default;
+}
+
+/* AÇÕES */
 
 .card-actions {
   display: flex;
@@ -361,10 +544,27 @@ button:disabled { opacity: .6; cursor: wait; }
   padding: 9px 12px;
 }
 
-.action-edit { background: var(--green-soft); color: var(--primary-dark); }
-.action-pause { background: var(--yellow-soft); color: #886515; }
-.action-complete { background: #edf0f2; color: #59676d; }
-.action-resume { background: var(--green-soft); color: var(--primary-dark); }
+.action-edit {
+  background: var(--green-soft);
+  color: var(--primary-dark);
+}
+
+.action-pause {
+  background: var(--yellow-soft);
+  color: #886515;
+}
+
+.action-complete {
+  background: #edf0f2;
+  color: #59676d;
+}
+
+.action-resume {
+  background: var(--green-soft);
+  color: var(--primary-dark);
+}
+
+/* ESTADO VAZIO E MENSAGENS */
 
 .empty-state {
   background: white;
@@ -382,7 +582,9 @@ button:disabled { opacity: .6; cursor: wait; }
   padding: 20px 10px;
 }
 
-.footer p { font-size: 12px; }
+.footer p {
+  font-size: 12px;
+}
 
 .message {
   position: fixed;
@@ -399,16 +601,71 @@ button:disabled { opacity: .6; cursor: wait; }
   text-align: center;
 }
 
-.message.error { background: #a94442; }
+.message.error {
+  background: #a94442;
+}
+
+/* CELULAR */
 
 @media (max-width: 560px) {
-  .container { width: min(100% - 22px, 850px); padding-top: 15px; }
-  .panel { padding: 19px; border-radius: 17px; }
-  .welcome h1 { font-size: 27px; }
-  .summary-grid { gap: 8px; }
-  .summary-card { padding: 12px 9px; font-size: 11px; }
-  .summary-number { font-size: 23px; }
-  .two-columns { grid-template-columns: 1fr; gap: 0; }
-  .medication-card { padding: 16px; }
-  .medication-card-top { flex-direction: column; }
+  .container {
+    width: min(100% - 22px, 850px);
+    padding-top: 15px;
+  }
+
+  .panel {
+    padding: 19px;
+    border-radius: 17px;
+  }
+
+  .welcome h1 {
+    font-size: 27px;
+  }
+
+  .summary-grid {
+    gap: 8px;
+  }
+
+  .summary-card {
+    padding: 12px 9px;
+    font-size: 11px;
+  }
+
+  .summary-number {
+    font-size: 23px;
+  }
+
+  .two-columns {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+
+  .medication-card {
+    padding: 16px;
+  }
+
+  .medication-card-top {
+    flex-direction: column;
+  }
+
+  .time-row {
+    grid-template-columns: minmax(90px, 1fr) minmax(65px, 85px) auto;
+  }
+
+  .time-unit {
+    display: none;
+  }
+
+  .remove-time {
+    padding: 8px;
+  }
+
+  .dose-row {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .dose-button {
+    width: 100%;
+  }
 }
