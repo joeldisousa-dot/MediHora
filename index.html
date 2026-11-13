@@ -3,8 +3,9 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#f4f8f7">
+  <meta name="description" content="Organize seus medicamentos e acompanhe seus horários e estoque.">
   <title>MediHora | Controle de medicamentos</title>
   <link rel="manifest" href="manifest.json">
   <link rel="stylesheet" href="style.css">
@@ -14,14 +15,16 @@
 <body>
   <main class="container">
 
+    <!-- ACESSO -->
     <section id="authSection" class="auth-section">
       <div class="brand">
         <div class="brand-icon">✚</div>
         <h1>MediHora</h1>
-        <p>Seus horários de medicamentos organizados.</p>
+        <p>Seus medicamentos organizados com simplicidade.</p>
       </div>
 
       <div class="panel auth-panel">
+
         <div id="loginBox">
           <h2>Bem-vindo!</h2>
           <p class="muted">Entre na sua conta para continuar.</p>
@@ -33,7 +36,8 @@
 
             <label for="loginPassword">Senha</label>
             <input id="loginPassword" type="password"
-                   autocomplete="current-password" placeholder="Sua senha" required>
+                   autocomplete="current-password"
+                   placeholder="Sua senha" required>
 
             <button class="primary full" type="submit">Entrar</button>
           </form>
@@ -53,7 +57,7 @@
           <form id="registerForm">
             <label for="registerName">Seu nome</label>
             <input id="registerName" type="text" autocomplete="name"
-                   placeholder="Como podemos chamar você?" required>
+                   placeholder="Seu nome" required>
 
             <label for="registerEmail">E-mail</label>
             <input id="registerEmail" type="email" autocomplete="email"
@@ -66,6 +70,7 @@
 
             <button class="primary full" type="submit">Criar conta</button>
           </form>
+
           <button class="link-button" id="showLoginFromRegister" type="button">
             Voltar para entrar
           </button>
@@ -74,11 +79,14 @@
         <div id="recoveryBox" class="hidden">
           <h2>Recuperar senha</h2>
           <p class="muted">Informe seu e-mail para receber o link de recuperação.</p>
+
           <form id="recoveryForm">
             <label for="recoveryEmail">E-mail</label>
-            <input id="recoveryEmail" type="email" required placeholder="seuemail@exemplo.com">
+            <input id="recoveryEmail" type="email" required
+                   placeholder="seuemail@exemplo.com">
             <button class="primary full" type="submit">Enviar link</button>
           </form>
+
           <button class="link-button" id="showLoginFromRecovery" type="button">
             Voltar para entrar
           </button>
@@ -86,7 +94,9 @@
       </div>
     </section>
 
+    <!-- APLICATIVO -->
     <section id="appSection" class="hidden">
+
       <header class="topbar">
         <div class="brand-small">
           <span class="brand-icon small-icon">✚</span>
@@ -118,6 +128,7 @@
         </div>
       </section>
 
+      <!-- FORMULÁRIO -->
       <section class="panel form-panel" id="medicationPanel">
         <div class="section-heading">
           <div>
@@ -127,7 +138,9 @@
           <span class="heading-icon">＋</span>
         </div>
 
-        <p class="muted">Preencha os dados conforme a orientação do profissional de saúde.</p>
+        <p class="muted">
+          Preencha conforme a orientação do profissional de saúde.
+        </p>
 
         <form id="medicationForm">
           <input type="hidden" id="medicationId">
@@ -142,7 +155,7 @@
 
           <label for="medInstructions">Instruções (opcional)</label>
           <textarea id="medInstructions" rows="2"
-                    placeholder="Ex.: Conforme orientação médica"></textarea>
+                    placeholder="Informações conforme a prescrição"></textarea>
 
           <div class="two-columns">
             <div>
@@ -156,10 +169,47 @@
             </div>
           </div>
 
+          <!-- ESTOQUE -->
+          <div class="stock-fields">
+            <h3>📦 Controle de estoque</h3>
+            <p class="muted small-text">
+              Informe a quantidade que você tem disponível.
+            </p>
+
+            <div class="two-columns">
+              <div>
+                <label for="stockQuantity">Quantidade disponível</label>
+                <input id="stockQuantity" type="number"
+                       min="0" step="0.01" placeholder="Ex.: 30" required>
+              </div>
+
+              <div>
+                <label for="stockUnit">Unidade</label>
+                <select id="stockUnit">
+                  <option value="comprimidos">Comprimidos</option>
+                  <option value="cápsulas">Cápsulas</option>
+                  <option value="gotas">Gotas</option>
+                  <option value="ml">ml</option>
+                  <option value="unidades">Unidades</option>
+                </select>
+              </div>
+            </div>
+
+            <label for="stockAlertDays">Avisar quantos dias antes?</label>
+            <input id="stockAlertDays" type="number"
+                   min="1" max="30" value="3" required>
+            <p class="muted small-text">
+              O aplicativo calcula a previsão com base no consumo diário.
+            </p>
+          </div>
+
+          <!-- HORÁRIOS -->
           <div class="schedule-heading">
             <div>
-              <label>Horários do medicamento</label>
-              <p class="muted small-text">Adicione todos os horários prescritos.</p>
+              <label>Horários e quantidades</label>
+              <p class="muted small-text">
+                Informe quantas unidades são tomadas em cada horário.
+              </p>
             </div>
             <button type="button" id="addTimeButton" class="add-time-button">
               + Horário
@@ -179,8 +229,9 @@
         </form>
       </section>
 
+      <!-- LISTA -->
       <section class="medications-section">
-        <div class="section-heading list-heading">
+        <div class="section-heading">
           <div>
             <p class="eyebrow">ACOMPANHAMENTO</p>
             <h2>Meus medicamentos</h2>
@@ -195,17 +246,21 @@
         </div>
 
         <div id="medicationList" class="medication-list">
-          <div class="empty-state">Carregando seus medicamentos...</div>
+          <div class="empty-state">Carregando medicamentos...</div>
         </div>
       </section>
 
       <footer class="footer">
         MediHora • Organização e cuidado no dia a dia.
-        <p>O aplicativo organiza informações. Siga sempre a prescrição recebida.</p>
+        <p>
+          O aplicativo organiza informações. Siga sempre a orientação
+          do profissional de saúde responsável.
+        </p>
       </footer>
     </section>
 
-    <div id="message" class="message hidden" role="status" aria-live="polite"></div>
+    <div id="message" class="message hidden" role="status"
+         aria-live="polite"></div>
   </main>
 </body>
 </html>
