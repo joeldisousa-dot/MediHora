@@ -339,6 +339,7 @@ function isMedicationScheduledToday(medication) {
   return true;
 }
 
+
 function renderTodayMedications() {
   const container = $("todayMedicationList");
 
@@ -365,6 +366,7 @@ function renderTodayMedications() {
 
   container.innerHTML = items.map(({ medication, schedules }) => {
     const stockUnit = medication.stock_unit || "unidades";
+    const currentStock = formatQuantity(medication.stock_quantity);
 
     const doseCards = schedules.map(schedule => {
       const status = schedule.doseStatus || "pending";
@@ -379,6 +381,19 @@ function renderTodayMedications() {
       const notTakenSelected = status === "not_taken" ? "selected" : "";
       const locked = status === "taken";
 
+      // Exibe o estoque atualizado quando a dose foi tomada.
+      const stockInfo = status === "taken"
+        ? `
+          <div class="dose-stock-info">
+            <span>📦</span>
+            <span>
+              Estoque restante:
+              <strong>${escapeHTML(currentStock)} ${escapeHTML(stockUnit)}</strong>
+            </span>
+          </div>
+        `
+        : "";
+
       return `
         <div class="today-dose status-${status}">
           <div class="today-dose-heading">
@@ -387,7 +402,8 @@ function renderTodayMedications() {
           </div>
 
           <p>
-            Quantidade: ${escapeHTML(formatQuantity(schedule.dose_quantity))}
+            Quantidade desta dose:
+            ${escapeHTML(formatQuantity(schedule.dose_quantity))}
             ${escapeHTML(stockUnit)}
           </p>
 
@@ -412,6 +428,8 @@ function renderTodayMedications() {
               Não tomado
             </button>
           </div>
+
+          ${stockInfo}
         </div>`;
     }).join("");
 
@@ -423,6 +441,7 @@ function renderTodayMedications() {
       </article>`;
   }).join("");
 }
+
 
 /* ============================================================
    REGISTRAR DOSE COMO TOMADA
