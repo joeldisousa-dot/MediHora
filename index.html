@@ -65,6 +65,41 @@
       </div>
 
       <div id="recoveryPanel" class="hidden">
+        
+      <!-- NOVA SENHA: EXIBIDA AO CLICAR NO LINK DE RECUPERAÇÃO -->
+      <div id="passwordResetPanel" class="hidden">
+        <h2>Criar nova senha</h2>
+        <p class="muted">
+          Escolha uma nova senha para acessar sua conta do MediHora.
+        </p>
+
+        <form id="passwordResetForm">
+          <label for="newPassword">Nova senha</label>
+          <input
+            id="newPassword"
+            type="password"
+            autocomplete="new-password"
+            minlength="6"
+            required
+            placeholder="Digite sua nova senha"
+          >
+
+          <label for="confirmNewPassword">Confirmar nova senha</label>
+          <input
+            id="confirmNewPassword"
+            type="password"
+            autocomplete="new-password"
+            minlength="6"
+            required
+            placeholder="Digite novamente a senha"
+          >
+
+          <button class="button button-primary full" type="submit">
+            Salvar nova senha
+          </button>
+        </form>
+      </div>
+
         <h2>Recuperar senha</h2>
         <p class="muted">Informe seu e-mail para receber o link de recuperação.</p>
 
