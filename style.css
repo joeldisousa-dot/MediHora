@@ -19,7 +19,7 @@ body { margin: 0; background: var(--background); color: var(--text); font-family
 button, input, select, textarea { font: inherit; }
 button { cursor: pointer; }
 button:disabled { opacity: .55; cursor: not-allowed; }
-.hidden { display: none !important; } 
+.hidden { display: none !important; }
 .topbar {
   min-height: 68px; padding: 12px max(20px, calc((100% - 980px) / 2));
   background: white; border-bottom: 1px solid var(--border);
