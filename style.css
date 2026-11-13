@@ -1,4 +1,3 @@
-
 :root {
   --primary: #26775a;
   --primary-dark: #1c6047;
@@ -15,640 +14,121 @@
   --shadow: 0 5px 20px rgba(30, 65, 48, .06);
   font-family: "Nunito", Arial, sans-serif;
 }
-
-* {
-  box-sizing: border-box;
-}
-
-body {
-  margin: 0;
-  background: var(--background);
-  color: var(--text);
-  font-family: "Nunito", Arial, sans-serif;
-}
-
-button, input, select, textarea {
-  font: inherit;
-}
-
-button {
-  cursor: pointer;
-}
-
-.hidden {
-  display: none !important;
-}
-
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--background); color: var(--text); font-family: "Nunito", Arial, sans-serif; }
+button, input, select, textarea { font: inherit; }
+button { cursor: pointer; }
+button:disabled { opacity: .55; cursor: not-allowed; }
+.hidden { display: none !important; }
 .topbar {
-  min-height: 68px;
-  padding: 12px max(20px, calc((100% - 980px) / 2));
-  background: white;
-  border-bottom: 1px solid var(--border);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.brand {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  color: var(--text);
-  text-decoration: none;
-  font-size: 22px;
-  font-weight: 900;
-}
-
-.brand-icon {
-  width: 38px;
-  height: 38px;
-  border-radius: 12px;
-  display: grid;
-  place-items: center;
-  background: var(--primary-soft);
-  font-size: 21px;
-}
-
-.page {
-  max-width: 980px;
-  padding: 28px 20px 50px;
-  margin: auto;
-}
-
-h1, h2, h3, p {
-  margin-top: 0;
-}
-
-h1 {
-  font-size: clamp(25px, 4vw, 32px);
-  margin-bottom: 7px;
-  line-height: 1.2;
-}
-
-h2 {
-  font-size: 23px;
-  margin-bottom: 5px;
-}
-
-h3 {
-  font-size: 18px;
-}
-
-.muted {
-  color: var(--muted);
-}
-
-.small-text {
-  font-size: 13px;
-}
-
-.eyebrow {
-  color: var(--primary);
-  font-size: 11px;
-  letter-spacing: 1.4px;
-  font-weight: 900;
-  margin-bottom: 7px;
-}
-
-.auth-card {
-  max-width: 440px;
-  margin: 25px auto;
-  background: white;
-  padding: 30px;
-  border: 1px solid var(--border);
-  border-radius: 22px;
-  box-shadow: var(--shadow);
-}
-
-.auth-intro {
-  text-align: center;
-  margin-bottom: 25px;
-}
-
-.auth-intro h1 {
-  font-size: 25px;
-}
-
-.auth-intro p {
-  color: var(--muted);
-  line-height: 1.5;
-}
-
-.large-icon {
-  width: 65px;
-  height: 65px;
-  border-radius: 20px;
-  display: grid;
-  place-items: center;
-  background: var(--primary-soft);
-  font-size: 34px;
-  margin: 0 auto 15px;
-}
-
-label {
-  display: block;
-  font-size: 14px;
-  font-weight: 800;
-  margin: 13px 0 6px;
-}
-
-input, select, textarea {
-  width: 100%;
-  min-height: 46px;
-  border: 1px solid var(--border);
-  background: #fff;
-  color: var(--text);
-  border-radius: 11px;
-  padding: 11px 13px;
-  outline: none;
-}
-
-textarea {
-  resize: vertical;
-}
-
-input:focus, select:focus, textarea:focus {
-  border-color: var(--primary);
-  box-shadow: 0 0 0 3px rgba(38, 119, 90, .10);
-}
-
-.button {
-  min-height: 44px;
-  border: 0;
-  border-radius: 11px;
-  padding: 11px 17px;
-  font-weight: 900;
-  transition: transform .12s ease, opacity .12s ease;
-}
-
-.button:active {
-  transform: scale(.98);
-}
-
-.button:disabled {
-  cursor: not-allowed;
-  opacity: .55;
-}
-
-.button-primary {
-  background: var(--primary);
-  color: white;
-}
-
-.button-primary:hover {
-  background: var(--primary-dark);
-}
-
-.button-secondary {
-  color: var(--primary-dark);
-  background: var(--primary-soft);
-}
-
-.button-light {
-  color: var(--text);
-  background: #edf2ef;
-}
-
-.full {
-  width: 100%;
-}
-
-.auth-card form .button {
-  margin-top: 20px;
-}
-
-.text-button {
-  display: block;
-  border: 0;
-  background: transparent;
-  color: var(--primary-dark);
-  padding: 12px 0 0;
-  font-weight: 800;
-}
-
-.welcome {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin: 4px 0 24px;
-}
-
-.today-section {
-  margin-bottom: 25px;
-}
-
-.section-heading {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 15px;
-  margin-bottom: 14px;
-}
-
-.section-heading p:last-child {
-  margin-bottom: 0;
-}
-
-.today-icon {
-  font-size: 27px;
-  background: #fff6df;
-  width: 48px;
-  height: 48px;
-  display: grid;
-  place-items: center;
-  border-radius: 15px;
-}
-
-.today-medication-list {
-  display: grid;
-  gap: 14px;
-  margin-top: 15px;
-}
-
-.today-medication-card,
-.panel {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 17px;
-  padding: 19px;
-  box-shadow: var(--shadow);
-}
-
-.today-medication-card h3 {
-  margin: 0;
-  font-size: 19px;
-}
-
-.medication-dose {
-  color: var(--muted);
-  margin: 3px 0 0;
-  font-size: 14px;
-}
-
-.today-dose {
-  margin-top: 14px;
-  padding: 13px;
-  border-radius: 13px;
-  border: 1px solid var(--border);
-  background: #f5f7f6;
-}
-
-.today-dose.status-taken {
-  background: var(--green-soft);
-  border-color: #9bd5ad;
-}
-
-.today-dose.status-not_taken {
-  background: var(--red-soft);
-  border-color: #edb5b1;
-}
-
-.today-dose.status-pending {
-  background: #f5f7f6;
-  border-color: var(--border);
-}
-
-.today-dose-heading {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  margin-bottom: 8px;
-}
-
-.today-dose-time {
-  font-size: 17px;
-  font-weight: 900;
-}
-
-.today-dose-state {
-  font-size: 12px;
-  font-weight: 900;
-  text-align: right;
-}
-
-.status-taken .today-dose-state {
-  color: #147343;
-}
-
-.status-not_taken .today-dose-state {
-  color: #b13e38;
-}
-
-.status-pending .today-dose-state {
-  color: #71827e;
-}
-
-.today-dose p {
-  font-size: 13px;
-  color: var(--muted);
-  margin: 0 0 10px;
-}
-
-.today-dose-actions {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 9px;
-}
-
-.today-dose-actions button {
-  min-height: 43px;
-  border: 0;
-  border-radius: 10px;
-  padding: 10px 8px;
-  font-size: 14px;
-  font-weight: 900;
-}
-
-.button-taken {
-  background: #168b4f;
-  color: white;
-}
-
-.button-not-taken {
-  background: #c84943;
-  color: white;
-}
-
-.today-dose-actions button.selected {
-  outline: 3px solid rgba(36, 59, 56, .18);
-  outline-offset: 1px;
-}
-
-.today-dose-actions button:disabled {
-  opacity: .55;
-  cursor: not-allowed;
-}
-
-.today-empty, .empty-state {
-  text-align: center;
-  padding: 25px 16px;
-  background: white;
-  border: 1px dashed var(--border);
-  border-radius: 15px;
-  color: var(--muted);
-}
-
-.today-empty strong {
-  display: block;
-  color: var(--text);
-  margin: 8px 0;
-}
-
-.today-empty p {
-  margin-bottom: 0;
-  font-size: 14px;
-}
-
-.add-medication-button {
-  margin-top: 15px;
-  min-height: 52px;
-  font-size: 16px;
-}
-
-.form-panel {
-  margin: 22px 0;
-}
-
-.form-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 4px 15px;
-}
-
-.field-full {
-  grid-column: 1 / -1;
-}
-
-.schedule-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 12px;
-  margin: 25px 0 12px;
-}
-
-.schedule-header h3 {
-  margin-bottom: 3px;
-}
-
-.schedule-header p {
-  margin-bottom: 0;
-}
-
-.schedule-list {
-  display: grid;
-  gap: 10px;
-}
-
-.schedule-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr auto;
-  gap: 10px;
-  align-items: end;
-  background: #f7faf8;
-  border: 1px solid var(--border);
-  padding: 12px;
-  border-radius: 12px;
-}
-
-.schedule-row label {
-  margin-top: 0;
-}
-
-.remove-schedule {
-  min-height: 44px;
-  border: 0;
-  border-radius: 10px;
-  background: #fdeceb;
-  color: #a33b36;
-  font-weight: 900;
-  padding: 0 13px;
-}
-
-.form-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  margin-top: 22px;
-}
-
-.medication-list-panel {
-  margin-top: 24px;
-}
-
-.count-badge {
-  background: var(--primary-soft);
-  color: var(--primary-dark);
-  min-width: 34px;
-  height: 34px;
-  padding: 0 10px;
-  display: grid;
-  place-items: center;
-  border-radius: 50px;
-  font-weight: 900;
-}
-
-.medication-list {
-  display: grid;
-  gap: 12px;
-}
-
-.medication-item {
-  border: 1px solid var(--border);
-  border-radius: 13px;
-  padding: 15px;
-  background: #fff;
-}
-
-.medication-item-top {
-  display: flex;
-  justify-content: space-between;
-  gap: 12px;
-}
-
-.medication-item h3 {
-  margin-bottom: 3px;
-}
-
-.medication-meta {
-  font-size: 13px;
-  color: var(--muted);
-  line-height: 1.6;
-}
-
-.stock-warning {
-  color: #a35b16;
-  font-weight: 900;
-}
-
-.stock-empty {
-  color: #b13e38;
-  font-weight: 900;
-}
-
-.item-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-top: 12px;
-}
-
-.item-actions button {
-  min-height: 37px;
-  border: 0;
-  border-radius: 9px;
-  padding: 8px 12px;
-  font-weight: 800;
-  background: #edf2ef;
-  color: var(--text);
-}
-
-.item-actions .edit-button {
-  background: var(--primary-soft);
-  color: var(--primary-dark);
-}
-
-.item-actions .pause-button {
-  background: #fff4df;
-  color: #885d13;
-}
-
-.item-actions .complete-button {
-  background: #edf2ef;
-}
-
-.disclaimer {
-  margin: 25px 4px 0;
-  color: var(--muted);
-  font-size: 12px;
-  line-height: 1.6;
-  text-align: center;
-}
-
-.toast {
-  position: fixed;
-  left: 50%;
-  bottom: 22px;
-  transform: translate(-50%, 20px);
-  background: #20332c;
-  color: white;
-  padding: 13px 18px;
-  border-radius: 12px;
-  box-shadow: var(--shadow);
-  opacity: 0;
-  pointer-events: none;
-  transition: .2s ease;
-  max-width: calc(100% - 30px);
-  z-index: 50;
-  text-align: center;
-}
-
-.toast.show {
-  opacity: 1;
-  transform: translate(-50%, 0);
-}
-
-.toast.error {
-  background: #a83d38;
-}
-
+  min-height: 68px; padding: 12px max(20px, calc((100% - 980px) / 2));
+  background: white; border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.brand { display: flex; align-items: center; gap: 10px; color: var(--text); text-decoration: none; font-size: 22px; font-weight: 900; }
+.brand-icon { width: 38px; height: 38px; border-radius: 12px; display: grid; place-items: center; background: var(--primary-soft); font-size: 21px; }
+.page { max-width: 980px; padding: 28px 20px 50px; margin: auto; }
+h1, h2, h3, p { margin-top: 0; }
+h1 { font-size: clamp(25px, 4vw, 32px); margin-bottom: 7px; line-height: 1.2; }
+h2 { font-size: 23px; margin-bottom: 5px; }
+h3 { font-size: 18px; }
+.muted { color: var(--muted); }
+.small-text { font-size: 13px; }
+.eyebrow { color: var(--primary); font-size: 11px; letter-spacing: 1.4px; font-weight: 900; margin-bottom: 7px; }
+.auth-card { max-width: 440px; margin: 25px auto; background: white; padding: 30px; border: 1px solid var(--border); border-radius: 22px; box-shadow: var(--shadow); }
+.auth-intro { text-align: center; margin-bottom: 25px; }
+.auth-intro h1 { font-size: 25px; }
+.auth-intro p { color: var(--muted); line-height: 1.5; }
+.large-icon { width: 65px; height: 65px; border-radius: 20px; display: grid; place-items: center; background: var(--primary-soft); font-size: 34px; margin: 0 auto 15px; }
+label { display: block; font-size: 14px; font-weight: 800; margin: 13px 0 6px; }
+input, select, textarea { width: 100%; min-height: 46px; border: 1px solid var(--border); background: #fff; color: var(--text); border-radius: 11px; padding: 11px 13px; outline: none; }
+textarea { resize: vertical; }
+input:focus, select:focus, textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(38, 119, 90, .10); }
+.button { min-height: 44px; border: 0; border-radius: 11px; padding: 11px 17px; font-weight: 900; transition: transform .12s ease, opacity .12s ease; }
+.button:active { transform: scale(.98); }
+.button-primary { background: var(--primary); color: white; }
+.button-primary:hover { background: var(--primary-dark); }
+.button-secondary { color: var(--primary-dark); background: var(--primary-soft); }
+.button-light { color: var(--text); background: #edf2ef; }
+.full { width: 100%; }
+.auth-card form .button { margin-top: 20px; }
+.text-button { display: block; border: 0; background: transparent; color: var(--primary-dark); padding: 12px 0 0; font-weight: 800; }
+.welcome { display: flex; align-items: center; justify-content: space-between; margin: 4px 0 24px; }
+.today-section { margin-bottom: 25px; }
+.section-heading { display: flex; align-items: center; justify-content: space-between; gap: 15px; margin-bottom: 14px; }
+.today-icon { font-size: 27px; background: #fff6df; width: 48px; height: 48px; display: grid; place-items: center; border-radius: 15px; flex: 0 0 auto; }
+.today-medication-list { display: grid; gap: 14px; margin-top: 15px; }
+.today-medication-card, .panel { background: var(--surface); border: 1px solid var(--border); border-radius: 17px; padding: 19px; box-shadow: var(--shadow); }
+.today-medication-card h3 { margin: 0; font-size: 19px; }
+.medication-dose { color: var(--muted); margin: 3px 0 0; font-size: 14px; }
+.today-dose { margin-top: 14px; padding: 13px; border-radius: 13px; border: 1px solid var(--border); background: #f5f7f6; }
+.today-dose.status-taken { background: var(--green-soft); border-color: #9bd5ad; }
+.today-dose.status-not_taken { background: var(--red-soft); border-color: #edb5b1; }
+.today-dose.status-pending { background: #f5f7f6; border-color: var(--border); }
+.today-dose-heading { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 8px; }
+.today-dose-time { font-size: 17px; font-weight: 900; }
+.today-dose-state { font-size: 12px; font-weight: 900; text-align: right; }
+.status-taken .today-dose-state { color: #147343; }
+.status-not_taken .today-dose-state { color: #b13e38; }
+.status-pending .today-dose-state { color: #71827e; }
+.today-dose p { font-size: 13px; color: var(--muted); margin: 0 0 10px; }
+.today-dose-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; }
+.today-dose-actions button { min-height: 43px; border: 0; border-radius: 10px; padding: 10px 8px; font-size: 14px; font-weight: 900; }
+.button-taken { background: #168b4f; color: white; }
+.button-not-taken { background: #c84943; color: white; }
+.today-dose-actions button.selected { outline: 3px solid rgba(36, 59, 56, .18); outline-offset: 1px; }
+.today-dose-actions button:disabled { opacity: .55; cursor: not-allowed; }
+.today-empty, .empty-state { text-align: center; padding: 25px 16px; background: white; border: 1px dashed var(--border); border-radius: 15px; color: var(--muted); }
+.today-empty strong { display: block; color: var(--text); margin: 8px 0; }
+.today-empty p { margin-bottom: 0; font-size: 14px; }
+.add-medication-button { margin-top: 15px; min-height: 52px; font-size: 16px; }
+.form-panel, .restock-panel { margin: 22px 0; }
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 15px; }
+.field-full { grid-column: 1 / -1; }
+.field-help { display: block; color: var(--muted); font-size: 12px; margin-top: 5px; }
+.schedule-header { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin: 25px 0 12px; }
+.schedule-header h3 { margin-bottom: 3px; }
+.schedule-header p { margin-bottom: 0; }
+.schedule-list { display: grid; gap: 10px; }
+.schedule-row { display: grid; grid-template-columns: 1fr 1fr auto; gap: 10px; align-items: end; background: #f7faf8; border: 1px solid var(--border); padding: 12px; border-radius: 12px; }
+.schedule-row label { margin-top: 0; }
+.remove-schedule { min-height: 44px; border: 0; border-radius: 10px; background: var(--red-soft); color: #a33b36; font-weight: 900; padding: 0 13px; }
+.form-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 22px; }
+.form-actions .button { flex: 1 1 150px; }
+.medication-list-panel { margin-top: 24px; }
+.count-badge { background: var(--primary-soft); color: var(--primary-dark); min-width: 34px; height: 34px; padding: 0 10px; display: grid; place-items: center; border-radius: 50px; font-weight: 900; }
+.medication-list { display: grid; gap: 12px; }
+.medication-item { border: 1px solid var(--border); border-radius: 13px; padding: 15px; background: #fff; }
+.medication-item-top { display: flex; justify-content: space-between; gap: 12px; }
+.medication-item h3 { margin-bottom: 3px; }
+.medication-meta { font-size: 13px; color: var(--muted); line-height: 1.6; margin-top: 8px; }
+.stock-warning { color: #a35b16; font-weight: 900; }
+.stock-empty { color: #b13e38; font-weight: 900; }
+.item-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.item-actions button { min-height: 40px; border: 0; border-radius: 9px; padding: 9px 13px; font-weight: 800; background: #edf2ef; color: var(--text); }
+.item-actions .edit-button { background: var(--primary-soft); color: var(--primary-dark); }
+.item-actions .pause-button { background: #fff4df; color: #885d13; }
+.item-actions .restock-button { background: #e5f5eb; color: #147343; }
+.item-actions .complete-button { background: #edf2ef; }
+.restock-panel { border: 2px solid #b9dec6; }
+.dose-stock-info { display: flex; align-items: center; gap: 9px; margin-top: 12px; padding: 11px 12px; background: #fff; border: 1px solid #9bd5ad; border-radius: 10px; color: #147343; font-size: 13px; }
+.dose-stock-info strong { font-weight: 900; }
+.disclaimer { margin: 25px 4px 0; color: var(--muted); font-size: 12px; line-height: 1.6; text-align: center; }
+.toast { position: fixed; left: 50%; bottom: 22px; transform: translate(-50%, 20px); background: #20332c; color: white; padding: 13px 18px; border-radius: 12px; box-shadow: var(--shadow); opacity: 0; pointer-events: none; transition: .2s ease; max-width: calc(100% - 30px); z-index: 50; text-align: center; }
+.toast.show { opacity: 1; transform: translate(-50%, 0); }
+.toast.error { background: #a83d38; }
 @media (max-width: 600px) {
-  .page {
-    padding: 20px 14px 40px;
-  }
-
-  .auth-card {
-    padding: 23px 18px;
-  }
-
-  .form-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .field-full {
-    grid-column: auto;
-  }
-
-  .schedule-row {
-    grid-template-columns: 1fr 1fr;
-  }
-
-  .remove-schedule {
-    grid-column: 1 / -1;
-  }
-
-  .today-dose-actions {
-    grid-template-columns: 1fr 1fr;
-  }
-
-  .today-medication-card,
-  .panel {
-    padding: 15px;
-  }
+  .page { padding: 20px 14px 40px; }
+  .auth-card { padding: 23px 18px; }
+  .form-grid { grid-template-columns: 1fr; }
+  .field-full { grid-column: auto; }
+  .schedule-row { grid-template-columns: 1fr 1fr; }
+  .remove-schedule { grid-column: 1 / -1; }
+  .today-dose-actions { grid-template-columns: 1fr 1fr; }
+  .today-medication-card, .panel { padding: 15px; }
+  .topbar { padding-left: 14px; padding-right: 14px; }
 }
-
 @media (max-width: 360px) {
-  .today-dose-actions {
-    grid-template-columns: 1fr;
-  }
-}
-
-/* ESTOQUE RESTANTE APÓS REGISTRAR DOSE */
-
-.dose-stock-info {
-  display: flex;
-  align-items: center;
-  gap: 9px;
-  margin-top: 12px;
-  padding: 11px 12px;
-  background: #ffffff;
-  border: 1px solid #9bd5ad;
-  border-radius: 10px;
-  color: #147343;
-  font-size: 13px;
-}
-
-.dose-stock-info strong {
-  font-weight: 900;
+  .today-dose-actions { grid-template-columns: 1fr; }
+  .section-heading { align-items: flex-start; }
 }
