@@ -1232,12 +1232,21 @@ function renderMedications() {
     return `
       <article class="medication-item">
         <div class="medication-item-top">
-          <div>
-            <h3>${escapeHTML(medication.name)}</h3>
-            <p class="medication-dose">${escapeHTML(medication.dose)}</p>
-          </div>
-          <span class="small-text">${statusLabel}</span>
-        </div>
+  <div>
+    <h3>${escapeHTML(medication.name)}</h3>
+    <p class="medication-dose">${escapeHTML(medication.dose)}</p>
+
+    <p class="medication-stock-display">
+      📦 Disponível:
+      <strong>
+        ${escapeHTML(formatQuantity(medication.stock_quantity))}
+        ${escapeHTML(medication.stock_unit || "unidades")}
+      </strong>
+    </p>
+  </div>
+
+  <span class="small-text">${statusLabel}</span>
+</div>
 
         <div class="medication-meta">
           <div>Horários: ${escapeHTML(times || "Não definidos")}</div>
