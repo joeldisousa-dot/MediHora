@@ -17,15 +17,23 @@
   box-sizing: border-box;
 }
 
+html {
+  scroll-behavior: smooth;
+}
+
 body {
   margin: 0;
   background: var(--background);
   color: var(--text);
   font-family: "Nunito", sans-serif;
   font-size: 15px;
+  -webkit-font-smoothing: antialiased;
 }
 
-button, input, select, textarea {
+button,
+input,
+select,
+textarea {
   font: inherit;
 }
 
@@ -33,18 +41,32 @@ button {
   cursor: pointer;
 }
 
+button:disabled {
+  cursor: not-allowed;
+  opacity: .6;
+}
+
 .hidden {
   display: none !important;
 }
 
+[hidden] {
+  display: none !important;
+}
+
+/* CABEÇALHO */
+
 .topbar {
-  height: 68px;
+  min-height: 68px;
   padding: 0 max(22px, calc((100% - 1100px) / 2));
   display: flex;
   align-items: center;
   justify-content: space-between;
   background: #fff;
   border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  z-index: 50;
 }
 
 .brand {
@@ -67,6 +89,8 @@ button {
   font-size: 21px;
 }
 
+/* PÁGINA */
+
 .page {
   width: min(100% - 32px, 1050px);
   margin: 30px auto 60px;
@@ -81,6 +105,8 @@ button {
   border-radius: 20px;
   box-shadow: var(--shadow);
 }
+
+/* LOGIN */
 
 .auth-card {
   max-width: 470px;
@@ -146,6 +172,8 @@ textarea {
   resize: vertical;
 }
 
+/* BOTÕES */
+
 .button {
   border: 0;
   min-height: 42px;
@@ -155,14 +183,8 @@ textarea {
   transition: transform .15s, background .15s, box-shadow .15s;
 }
 
-.button:hover {
+.button:hover:not(:disabled) {
   transform: translateY(-1px);
-}
-
-.button:disabled {
-  opacity: .55;
-  cursor: not-allowed;
-  transform: none;
 }
 
 .button-primary {
@@ -171,7 +193,7 @@ textarea {
   box-shadow: 0 4px 10px rgba(25, 134, 91, .14);
 }
 
-.button-primary:hover {
+.button-primary:hover:not(:disabled) {
   background: var(--green-dark);
 }
 
@@ -200,6 +222,12 @@ textarea {
   padding: 7px;
 }
 
+.text-button:hover {
+  text-decoration: underline;
+}
+
+/* BOAS-VINDAS */
+
 .welcome {
   padding: 24px 28px;
   margin-bottom: 22px;
@@ -217,6 +245,8 @@ textarea {
   font-weight: 900;
   letter-spacing: 1.1px;
 }
+
+/* SEÇÕES */
 
 .today-section,
 .panel {
@@ -250,6 +280,8 @@ textarea {
   border-radius: 15px;
   background: #fff6df;
 }
+
+/* MEDICAMENTOS DE HOJE */
 
 .today-medication-list {
   display: flex;
@@ -288,6 +320,8 @@ textarea {
 .medication-stock-display strong {
   color: var(--green-dark);
 }
+
+/* DOSES */
 
 .today-dose {
   padding: 15px;
@@ -382,6 +416,8 @@ textarea {
   color: var(--green-dark);
 }
 
+/* ESTADOS VAZIOS */
+
 .today-empty,
 .empty-state {
   text-align: center;
@@ -406,16 +442,7 @@ textarea {
   margin: 0 0 22px;
 }
 
-.count-badge {
-  display: grid;
-  place-items: center;
-  min-width: 35px;
-  height: 35px;
-  border-radius: 50%;
-  background: var(--green-light);
-  color: var(--green-dark);
-  font-weight: 900;
-}
+/* FORMULÁRIO */
 
 .form-grid {
   display: grid;
@@ -479,6 +506,19 @@ textarea {
   margin-top: 22px;
 }
 
+/* LISTA DE MEDICAMENTOS */
+
+.count-badge {
+  display: grid;
+  place-items: center;
+  min-width: 35px;
+  height: 35px;
+  border-radius: 50%;
+  background: var(--green-light);
+  color: var(--green-dark);
+  font-weight: 900;
+}
+
 .medication-list {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -540,9 +580,13 @@ textarea {
   font-weight: 900;
 }
 
+/* REPOSIÇÃO */
+
 .restock-panel {
   border-left: 4px solid var(--green);
 }
+
+/* AVISO */
 
 .disclaimer {
   max-width: 800px;
@@ -552,6 +596,8 @@ textarea {
   font-size: 12px;
   line-height: 1.6;
 }
+
+/* MENSAGENS */
 
 .toast {
   position: fixed;
@@ -745,10 +791,32 @@ textarea {
   0%, 100% {
     box-shadow: 0 0 0 rgba(220, 51, 51, 0);
   }
+
   50% {
     box-shadow: 0 0 12px rgba(220, 51, 51, .12);
   }
 }
+
+/* NOTEBOOK E TABLET */
+
+@media (min-width: 701px) {
+  .today-section,
+  .panel,
+  .welcome {
+    padding: 28px;
+  }
+
+  .medication-item {
+    transition: transform .18s ease, box-shadow .18s ease;
+  }
+
+  .medication-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(30, 60, 45, .07);
+  }
+}
+
+/* CELULAR */
 
 @media (max-width: 700px) {
   .page {
@@ -757,13 +825,21 @@ textarea {
   }
 
   .topbar {
-    height: 60px;
+    min-height: 60px;
     padding: 0 15px;
+  }
+
+  .brand {
+    font-size: 19px;
   }
 
   .auth-card {
     margin: 20px auto;
     padding: 23px 18px;
+  }
+
+  .auth-intro h1 {
+    font-size: 22px;
   }
 
   .today-section,
@@ -825,7 +901,21 @@ textarea {
   .button-not-taken {
     width: 100%;
   }
+
+  .form-actions {
+    flex-direction: column;
+  }
+
+  .form-actions .button {
+    width: 100%;
+  }
+
+  .schedule-header {
+    align-items: flex-start;
+  }
 }
+
+/* ACESSIBILIDADE */
 
 @media (prefers-reduced-motion: reduce) {
   *,
@@ -833,5 +923,6 @@ textarea {
   *::after {
     animation-duration: .01ms !important;
     transition-duration: .01ms !important;
+    scroll-behavior: auto !important;
   }
 }
