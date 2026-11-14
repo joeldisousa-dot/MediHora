@@ -2,7 +2,7 @@
 /* ============================================================
    MEDIHORA
    Aplicativo de organização de medicamentos
-   Supabase + GitHub Pages
+   Supabase + GitHub Pages + OneSignal v16
    ============================================================ */
 
 const SUPABASE_URL = "https://dtwfettaesywyczfyvpr.supabase.co";
@@ -55,6 +55,7 @@ function getFirstElement(...ids) {
     const element = $(id);
     if (element) return element;
   }
+
   return null;
 }
 
@@ -236,9 +237,15 @@ function showMessage(message, isError = false) {
     toast.classList.remove("show");
   }, 3500);
 }
+
 /* ============================================================
    ONESIGNAL — NOTIFICAÇÕES DO MEDIHORA
    ============================================================ */
+
+/*
+  Executa uma operação depois que o SDK OneSignal estiver
+  disponível e inicializado.
+*/
 
 function runOneSignal(callback) {
   return new Promise((resolve, reject) => {
@@ -255,6 +262,49 @@ function runOneSignal(callback) {
   });
 }
 
+/*
+  Atualiza a aparência do botão conforme a permissão
+  concedida ou não pelo navegador.
+*/
+
+async function updateNotificationButton() {
+  const button = $("enableNotificationsButton");
+
+  if (!button) return;
+
+  try {
+    const permission = await runOneSignal(async OneSignal => {
+      return OneSignal.Notifications.permission;
+    });
+
+    if (permission === true) {
+      button.textContent = "🔔 Lembretes ativados";
+      button.disabled = false;
+      button.classList.add("notifications-enabled");
+    } else {
+      button.textContent = "🔔 Ativar lembretes no celular";
+      button.disabled = false;
+      button.classList.remove("notifications-enabled");
+    }
+
+  } catch (error) {
+    console.warn(
+      "Não foi possível consultar a permissão:",
+      error
+    );
+
+    button.disabled = false;
+    button.textContent = "🔔 Ativar lembretes no celular";
+  }
+}
+
+/*
+  Vincula o usuário autenticado do Supabase ao OneSignal.
+
+  O identificador externo permite que o servidor envie
+  notificações somente para a conta correspondente.
+*/
+
 async function connectOneSignalUser(userId) {
   if (!userId) return;
 
@@ -264,10 +314,41 @@ async function connectOneSignalUser(userId) {
     });
 
     console.log("Conta vinculada ao OneSignal.");
+
+    await updateNotificationButton();
+
   } catch (error) {
-    console.error("Erro ao vincular OneSignal:", error);
+    console.error(
+      "Erro ao vincular OneSignal:",
+      error
+    );
   }
 }
+
+/*
+  Desvincula o usuário atual do OneSignal.
+*/
+
+async function disconnectOneSignalUser() {
+  try {
+    await runOneSignal(async OneSignal => {
+      await OneSignal.logout();
+    });
+
+    console.log("Conta desvinculada do OneSignal.");
+
+  } catch (error) {
+    console.warn(
+      "Não foi possível desvincular o OneSignal:",
+      error
+    );
+  }
+}
+
+/*
+  O pedido de permissão só acontece após o clique
+  explícito do usuário.
+*/
 
 async function enableMedicationNotifications() {
   if (!currentUser) {
@@ -286,37 +367,55 @@ async function enableMedicationNotifications() {
     const permission = await runOneSignal(async OneSignal => {
       await OneSignal.login(currentUser.id);
 
-      return await OneSignal.Notifications.requestPermission();
+      await OneSignal.Notifications.requestPermission();
+
+      return OneSignal.Notifications.permission;
     });
 
-    if (permission) {
-      showMessage("Notificações ativadas neste dispositivo!");
+    if (permission === true) {
+      showMessage(
+        "Notificações ativadas neste dispositivo!"
+      );
 
       if (button) {
         button.textContent = "🔔 Lembretes ativados";
+        button.classList.add("notifications-enabled");
       }
+
     } else {
       showMessage(
         "Permissão não concedida. Verifique as configurações de notificações do navegador.",
         true
       );
+
+      if (button) {
+        button.textContent = "🔔 Ativar lembretes no celular";
+        button.classList.remove("notifications-enabled");
+      }
     }
 
   } catch (error) {
-    console.error("Erro ao ativar notificações:", error);
+    console.error(
+      "Erro ao ativar notificações:",
+      error
+    );
 
     showMessage(
-      "Não foi possível ativar as notificações.",
+      "Não foi possível ativar as notificações. Verifique se o navegador permite notificações para este site.",
       true
     );
 
-  } finally {
-    if (button && button.textContent === "Ativando...") {
-      button.disabled = false;
+    if (button) {
       button.textContent = "🔔 Ativar lembretes no celular";
+    }
+
+  } finally {
+    if (button) {
+      button.disabled = false;
     }
   }
 }
+
 /* ============================================================
    AUTENTICAÇÃO
    ============================================================ */
@@ -372,6 +471,7 @@ async function handleRegister(event) {
       await showApplication(data.user);
 
       showMessage("Conta criada com sucesso!");
+
     } else {
       showMessage(
         "Cadastro realizado! Confira seu e-mail para confirmar a conta."
@@ -391,7 +491,7 @@ async function handleRegister(event) {
 }
 
 /* ============================================================
-   LOGIN CORRIGIDO
+   LOGIN
    ============================================================ */
 
 async function handleLogin(event) {
@@ -402,6 +502,7 @@ async function handleLogin(event) {
       "Conclua primeiro a alteração da sua senha.",
       true
     );
+
     return;
   }
 
@@ -417,6 +518,7 @@ async function handleLogin(event) {
       "Informe seu e-mail e sua senha.",
       true
     );
+
     return;
   }
 
@@ -435,7 +537,6 @@ async function handleLogin(event) {
     let authenticatedUser =
       data?.user || data?.session?.user;
 
-    // Confere novamente a sessão se o retorno não trouxe usuário.
     if (!authenticatedUser) {
       const { data: sessionData, error: sessionError } =
         await supabaseClient.auth.getSession();
@@ -497,7 +598,10 @@ async function handleRecovery(event) {
     showAuthPanel("loginPanel");
 
   } catch (error) {
-    console.error("Erro ao solicitar recuperação:", error);
+    console.error(
+      "Erro ao solicitar recuperação:",
+      error
+    );
 
     showMessage(
       error.message || "Não foi possível enviar o link.",
@@ -542,6 +646,7 @@ async function handlePasswordUpdate(event) {
       "A senha deve ter pelo menos 6 caracteres.",
       true
     );
+
     return;
   }
 
@@ -550,6 +655,7 @@ async function handlePasswordUpdate(event) {
       "As senhas informadas são diferentes.",
       true
     );
+
     return;
   }
 
@@ -571,6 +677,8 @@ async function handlePasswordUpdate(event) {
 
     recoveryMode = false;
 
+    await disconnectOneSignalUser();
+
     const { error: signOutError } =
       await supabaseClient.auth.signOut();
 
@@ -591,7 +699,10 @@ async function handlePasswordUpdate(event) {
     );
 
   } catch (error) {
-    console.error("Erro ao atualizar senha:", error);
+    console.error(
+      "Erro ao atualizar senha:",
+      error
+    );
 
     showMessage(
       error.message ||
@@ -611,6 +722,8 @@ async function handlePasswordUpdate(event) {
 
 async function logout() {
   try {
+    await disconnectOneSignalUser();
+
     const { error } = await supabaseClient.auth.signOut();
 
     if (error) throw error;
@@ -636,22 +749,25 @@ async function logout() {
     console.error("Erro ao sair:", error);
 
     showMessage(
-      error.message || "Não foi possível sair da conta.",
+      error.message || "Não foi possível sair da sua conta.",
       true
     );
   }
 }
 
 /* ============================================================
-   ABRIR A ÁREA PESSOAL — CORRIGIDO
+   ABRIR A ÁREA PESSOAL
    ============================================================ */
 
 async function showApplication(user) {
   if (!user || recoveryMode) return;
 
   currentUser = user;
-connectOneSignalUser(user.id);
-  // A área pessoal aparece imediatamente.
+
+  // Vincula a conta ao OneSignal sem bloquear a abertura
+  // da área pessoal.
+  connectOneSignalUser(user.id);
+
   $("authSection")?.classList.add("hidden");
   $("appSection")?.classList.remove("hidden");
   $("logoutButton")?.classList.remove("hidden");
@@ -671,7 +787,6 @@ connectOneSignalUser(user.id);
     $("medicationStartDate").value = todayLocalDate();
   }
 
-  // Evita duas consultas simultâneas para o mesmo usuário.
   if (
     applicationPromise &&
     applicationUserId === user.id
@@ -758,6 +873,7 @@ function addScheduleRow(time = "", quantity = "1") {
           "Mantenha pelo menos um horário.",
           true
         );
+
         return;
       }
 
@@ -847,6 +963,7 @@ function editMedication(id) {
       "Tratamentos concluídos não podem ser editados.",
       true
     );
+
     return;
   }
 
@@ -885,6 +1002,7 @@ function editMedication(id) {
   }
 
   $("formTitle").textContent = "Editar medicamento";
+
   $("saveMedicationButton").textContent =
     "Salvar alterações";
 
@@ -954,6 +1072,7 @@ async function saveMedication(event) {
       "Informe o nome e a dose do medicamento.",
       true
     );
+
     return;
   }
 
@@ -965,6 +1084,7 @@ async function saveMedication(event) {
       "O estoque não pode ser negativo.",
       true
     );
+
     return;
   }
 
@@ -976,6 +1096,7 @@ async function saveMedication(event) {
       "Informe uma duração válida em dias.",
       true
     );
+
     return;
   }
 
@@ -1004,6 +1125,7 @@ async function saveMedication(event) {
       "Confira os horários e as quantidades informadas.",
       true
     );
+
     return;
   }
 
@@ -1018,6 +1140,7 @@ async function saveMedication(event) {
       "Não repita o mesmo horário no cadastro.",
       true
     );
+
     return;
   }
 
@@ -1198,7 +1321,10 @@ async function saveMedication(event) {
     );
 
   } catch (error) {
-    console.error("Erro ao salvar medicamento:", error);
+    console.error(
+      "Erro ao salvar medicamento:",
+      error
+    );
 
     showMessage(
       error.message || "Não foi possível salvar o medicamento.",
@@ -1208,6 +1334,7 @@ async function saveMedication(event) {
   } finally {
     savingMedication = false;
     button.disabled = false;
+
     button.textContent = "Salvar medicamento";
   }
 }
@@ -1226,6 +1353,7 @@ function openRestockForm(medicationId) {
       "Medicamento não encontrado.",
       true
     );
+
     return;
   }
 
@@ -1294,6 +1422,7 @@ async function saveRestock(event) {
       "Informe uma quantidade maior que zero.",
       true
     );
+
     return;
   }
 
@@ -1325,7 +1454,10 @@ async function saveRestock(event) {
     showMessage("Estoque adicionado com sucesso!");
 
   } catch (error) {
-    console.error("Erro na reposição:", error);
+    console.error(
+      "Erro na reposição:",
+      error
+    );
 
     showMessage(
       error.message || "Não foi possível atualizar o estoque.",
@@ -1362,7 +1494,6 @@ async function loadMedications() {
 
     if (medicationError) throw medicationError;
 
-    // Não aplica resposta antiga caso a conta tenha mudado.
     if (!currentUser || currentUser.id !== userId) return;
 
     medications = medicationData || [];
@@ -2235,6 +2366,11 @@ function configureEvents() {
     logout
   );
 
+  $("enableNotificationsButton")?.addEventListener(
+    "click",
+    enableMedicationNotifications
+  );
+
   $("newMedicationButton")?.addEventListener(
     "click",
     openNewMedicationForm
@@ -2319,10 +2455,7 @@ function configureEvents() {
     }
   );
 }
-$("enableNotificationsButton")?.addEventListener(
-  "click",
-  enableMedicationNotifications
-);
+
 /* ============================================================
    RELÓGIO INTELIGENTE DAS DOSES
    ============================================================ */
