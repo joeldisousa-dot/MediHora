@@ -1,17 +1,52 @@
+/* ==========================================================
+   TOKENS
+   ========================================================== */
 
 :root {
-  --green: #19865b;
-  --green-dark: #126b47;
-  --green-light: #e9f7ef;
-  --background: #f5f8f6;
-  --text: #24352d;
-  --muted: #718078;
-  --border: #e3eae6;
+  /* Marca */
+  --green: #138a63;
+  --green-dark: #0b5d44;
+  --green-light: #e6f4ee;
+  --green-soft: #f1f8f4;
+
+  /* Superfícies e texto */
+  --background: #f3f6f4;
+  --surface: #ffffff;
+  --surface-alt: #f8faf9;
+  --text: #1c2b24;
+  --text-soft: #43544b;
+  --muted: #66766d;
+  --border: #e1e8e4;
+  --border-strong: #cfdad4;
   --white: #ffffff;
+
+  /* Estados */
   --red: #c62828;
-  --orange: #c45b13;
-  --shadow: 0 5px 22px rgba(30, 60, 45, .055);
+  --red-bg: #fdf0ef;
+  --red-border: #f1c9c6;
+  --orange: #b85410;
+  --orange-bg: #fff3e8;
+  --orange-border: #f6d3b4;
+  --amber-bg: #fff6df;
+  --blue-gray: #4f6577;
+  --blue-gray-bg: #edf2f6;
+
+  /* Forma */
+  --radius-sm: 10px;
+  --radius-md: 14px;
+  --radius-lg: 20px;
+
+  /* Sombras */
+  --shadow-sm: 0 1px 2px rgba(20, 50, 38, .05);
+  --shadow: 0 1px 2px rgba(20, 50, 38, .04), 0 8px 28px rgba(20, 50, 38, .06);
+  --shadow-lg: 0 2px 4px rgba(20, 50, 38, .05), 0 16px 36px rgba(20, 50, 38, .10);
+
+  --focus-ring: 0 0 0 3px rgba(19, 138, 99, .22);
 }
+
+/* ==========================================================
+   BASE
+   ========================================================== */
 
 * {
   box-sizing: border-box;
@@ -25,9 +60,16 @@ body {
   margin: 0;
   background: var(--background);
   color: var(--text);
-  font-family: "Nunito", sans-serif;
+  font-family: "Nunito", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   font-size: 15px;
+  line-height: 1.55;
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+h1, h2, h3 {
+  line-height: 1.25;
+  letter-spacing: -.01em;
 }
 
 button,
@@ -43,7 +85,13 @@ button {
 
 button:disabled {
   cursor: not-allowed;
-  opacity: .6;
+  opacity: .55;
+}
+
+button:focus-visible,
+a:focus-visible {
+  outline: 3px solid rgba(19, 138, 99, .45);
+  outline-offset: 2px;
 }
 
 .hidden {
@@ -54,7 +102,9 @@ button:disabled {
   display: none !important;
 }
 
-/* CABEÇALHO */
+/* ==========================================================
+   CABEÇALHO
+   ========================================================== */
 
 .topbar {
   min-height: 68px;
@@ -62,7 +112,9 @@ button:disabled {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background: #fff;
+  background: rgba(255, 255, 255, .86);
+  -webkit-backdrop-filter: saturate(160%) blur(12px);
+  backdrop-filter: saturate(160%) blur(12px);
   border-bottom: 1px solid var(--border);
   position: sticky;
   top: 0;
@@ -72,46 +124,53 @@ button:disabled {
 .brand {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 11px;
   text-decoration: none;
   color: var(--green-dark);
-  font-size: 21px;
+  font-size: 20px;
   font-weight: 900;
+  letter-spacing: -.02em;
 }
 
 .brand-icon {
-  width: 38px;
-  height: 38px;
+  width: 40px;
+  height: 40px;
   display: grid;
   place-items: center;
   border-radius: 12px;
-  background: var(--green-light);
+  background: linear-gradient(145deg, #e9f7f0, #d5eee2);
+  box-shadow: inset 0 0 0 1px rgba(19, 138, 99, .12);
   font-size: 21px;
 }
 
-/* PÁGINA */
+/* ==========================================================
+   PÁGINA E CARTÕES
+   ========================================================== */
 
 .page {
   width: min(100% - 32px, 1050px);
-  margin: 30px auto 60px;
+  margin: 32px auto 64px;
 }
 
 .auth-card,
 .welcome,
 .today-section,
 .panel {
-  background: #fff;
+  background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 20px;
+  border-radius: var(--radius-lg);
   box-shadow: var(--shadow);
 }
 
-/* LOGIN */
+/* ==========================================================
+   LOGIN
+   ========================================================== */
 
 .auth-card {
-  max-width: 470px;
-  margin: 45px auto;
-  padding: 34px;
+  max-width: 460px;
+  margin: 48px auto;
+  padding: 36px;
+  box-shadow: var(--shadow-lg);
 }
 
 .auth-intro {
@@ -120,14 +179,19 @@ button:disabled {
 }
 
 .large-icon {
-  font-size: 43px;
-  margin-bottom: 12px;
+  width: 72px;
+  height: 72px;
+  margin: 0 auto 16px;
+  display: grid;
+  place-items: center;
+  font-size: 36px;
+  border-radius: 22px;
+  background: var(--green-light);
 }
 
 .auth-intro h1 {
-  font-size: 25px;
-  line-height: 1.25;
-  margin: 0 0 9px;
+  font-size: 26px;
+  margin: 0 0 8px;
 }
 
 .auth-intro p,
@@ -137,64 +201,88 @@ button:disabled {
 
 .auth-card h2 {
   font-size: 20px;
-  margin: 0 0 20px;
+  margin: 0 0 18px;
 }
+
+/* ==========================================================
+   FORMULÁRIOS
+   ========================================================== */
 
 label {
   display: block;
   font-weight: 800;
-  margin: 14px 0 6px;
+  margin: 16px 0 6px;
   font-size: 13px;
+  color: var(--text-soft);
 }
 
 input,
 select,
 textarea {
   width: 100%;
-  min-height: 44px;
-  border: 1px solid #dce5df;
-  border-radius: 10px;
-  padding: 10px 12px;
-  background: #fff;
+  min-height: 46px;
+  border: 1.5px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  padding: 10px 14px;
+  background: var(--surface);
   color: var(--text);
   outline: none;
-  transition: border .2s, box-shadow .2s;
+  transition: border-color .18s, box-shadow .18s, background .18s;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: #9aa8a0;
+}
+
+input:hover,
+select:hover,
+textarea:hover {
+  border-color: #b8c8bf;
 }
 
 input:focus,
 select:focus,
 textarea:focus {
   border-color: var(--green);
-  box-shadow: 0 0 0 3px rgba(25, 134, 91, .10);
+  box-shadow: var(--focus-ring);
 }
 
 textarea {
   resize: vertical;
 }
 
-/* BOTÕES */
+/* ==========================================================
+   BOTÕES
+   ========================================================== */
 
 .button {
   border: 0;
-  min-height: 42px;
-  border-radius: 10px;
-  padding: 10px 17px;
+  min-height: 44px;
+  border-radius: var(--radius-sm);
+  padding: 10px 18px;
   font-weight: 800;
-  transition: transform .15s, background .15s, box-shadow .15s;
+  letter-spacing: .005em;
+  transition: transform .15s, background .15s, box-shadow .15s, color .15s;
 }
 
 .button:hover:not(:disabled) {
   transform: translateY(-1px);
 }
 
+.button:active:not(:disabled) {
+  transform: translateY(0);
+}
+
 .button-primary {
   color: #fff;
   background: var(--green);
-  box-shadow: 0 4px 10px rgba(25, 134, 91, .14);
+  box-shadow: 0 1px 2px rgba(11, 93, 68, .25), 0 6px 14px rgba(19, 138, 99, .18);
 }
 
 .button-primary:hover:not(:disabled) {
   background: var(--green-dark);
+  box-shadow: 0 1px 2px rgba(11, 93, 68, .3), 0 8px 18px rgba(19, 138, 99, .24);
 }
 
 .button-secondary {
@@ -202,55 +290,80 @@ textarea {
   background: var(--green-light);
 }
 
+.button-secondary:hover:not(:disabled) {
+  background: #d8eee3;
+}
+
 .button-light {
-  color: #52645a;
-  background: #edf2ef;
+  color: var(--text-soft);
+  background: #edf1ef;
+}
+
+.button-light:hover:not(:disabled) {
+  background: #e2e8e5;
 }
 
 .full {
   width: 100%;
-  margin-top: 18px;
+  margin-top: 20px;
 }
 
 .text-button {
   display: block;
-  margin: 13px auto 0;
+  margin: 14px auto 0;
   border: 0;
   background: transparent;
   color: var(--green-dark);
   font-weight: 800;
-  padding: 7px;
+  padding: 8px 10px;
+  border-radius: 8px;
 }
 
 .text-button:hover {
+  background: var(--green-soft);
   text-decoration: underline;
+  text-underline-offset: 3px;
 }
 
-/* BOAS-VINDAS */
+/* ==========================================================
+   BOAS-VINDAS
+   ========================================================== */
 
 .welcome {
-  padding: 24px 28px;
+  position: relative;
+  padding: 26px 30px 26px 34px;
   margin-bottom: 22px;
+  overflow: hidden;
+}
+
+.welcome::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 6px;
+  background: var(--green);
 }
 
 .welcome h1 {
   margin: 4px 0;
-  font-size: 27px;
+  font-size: 28px;
 }
 
 .eyebrow {
   margin: 0;
   color: var(--green);
-  font-size: 11px;
-  font-weight: 900;
-  letter-spacing: 1.1px;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: .02em;
 }
 
-/* SEÇÕES */
+/* ==========================================================
+   SEÇÕES
+   ========================================================== */
 
 .today-section,
 .panel {
-  padding: 25px;
+  padding: 26px;
   margin-bottom: 22px;
 }
 
@@ -259,7 +372,7 @@ textarea {
   align-items: center;
   justify-content: space-between;
   gap: 15px;
-  margin-bottom: 20px;
+  margin-bottom: 22px;
 }
 
 .section-heading h2 {
@@ -272,29 +385,33 @@ textarea {
 }
 
 .today-icon {
-  font-size: 30px;
-  width: 48px;
-  height: 48px;
+  font-size: 28px;
+  width: 52px;
+  height: 52px;
   display: grid;
   place-items: center;
-  border-radius: 15px;
-  background: #fff6df;
+  border-radius: 16px;
+  background: var(--amber-bg);
+  box-shadow: inset 0 0 0 1px rgba(196, 91, 19, .10);
 }
 
-/* MEDICAMENTOS DE HOJE */
+/* ==========================================================
+   MEDICAMENTOS DE HOJE
+   ========================================================== */
 
 .today-medication-list {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 18px;
 }
 
 .today-medication-card,
 .medication-item {
-  padding: 19px;
+  padding: 20px;
   border: 1px solid var(--border);
-  border-radius: 15px;
-  background: #fff;
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
 }
 
 .today-medication-card h3,
@@ -306,14 +423,16 @@ textarea {
 .medication-dose {
   color: var(--muted);
   margin: 3px 0 12px;
+  font-weight: 600;
 }
 
 .medication-stock-display {
-  color: #52645a;
+  color: var(--text-soft);
   font-size: 13px;
-  background: #f2f8f4;
-  padding: 9px 11px;
-  border-radius: 9px;
+  background: var(--green-soft);
+  border: 1px solid #deeee5;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
   margin: 12px 0;
 }
 
@@ -321,14 +440,18 @@ textarea {
   color: var(--green-dark);
 }
 
-/* DOSES */
+/* ==========================================================
+   DOSES
+   ========================================================== */
 
 .today-dose {
-  padding: 15px;
+  padding: 16px 16px 16px 18px;
   margin-top: 12px;
   border: 1px solid var(--border);
-  border-radius: 12px;
-  background: #fafcfb;
+  border-left: 5px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  background: var(--surface-alt);
+  transition: background .2s, border-color .2s, box-shadow .2s;
 }
 
 .today-dose-heading {
@@ -340,59 +463,81 @@ textarea {
 }
 
 .today-dose-time {
-  font-size: 15px;
+  font-size: 18px;
   font-weight: 900;
+  letter-spacing: -.01em;
+  font-variant-numeric: tabular-nums;
 }
 
 .today-dose-state {
-  color: #65756d;
+  color: var(--muted);
   font-size: 13px;
   font-weight: 800;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: #eef2f0;
 }
 
 .today-dose p {
   font-size: 13px;
-  color: #64736b;
+  color: var(--muted);
+  margin: 8px 0 0;
 }
 
 .today-dose-actions {
   display: flex;
   flex-wrap: wrap;
-  gap: 9px;
-  margin-top: 12px;
+  gap: 10px;
+  margin-top: 14px;
 }
 
 .button-taken,
 .button-not-taken {
   flex: 1;
   min-width: 130px;
-  min-height: 40px;
-  padding: 9px 12px;
-  border-radius: 9px;
+  min-height: 46px;
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
   font-weight: 900;
-  border: 1px solid transparent;
+  border: 1.5px solid transparent;
+  transition: background .15s, color .15s, border-color .15s, transform .15s;
+}
+
+.button-taken:hover:not(:disabled),
+.button-not-taken:hover:not(:disabled) {
+  transform: translateY(-1px);
 }
 
 .button-taken {
-  color: #147747;
+  color: #0f6d3f;
   background: #e8f6ed;
-  border-color: #ccebd8;
+  border-color: #c5e8d3;
+}
+
+.button-taken:hover:not(:disabled) {
+  background: #d9f0e2;
 }
 
 .button-not-taken {
-  color: #b52d2d;
-  background: #fff0f0;
-  border-color: #f3d2d2;
+  color: #b02a2a;
+  background: var(--red-bg);
+  border-color: var(--red-border);
+}
+
+.button-not-taken:hover:not(:disabled) {
+  background: #fbe3e1;
 }
 
 .button-taken.selected {
-  background: #16834a;
-  color: white;
+  background: #138a55;
+  border-color: #138a55;
+  color: #fff;
 }
 
 .button-not-taken.selected {
-  background: #c62828;
-  color: white;
+  background: var(--red);
+  border-color: var(--red);
+  color: #fff;
 }
 
 .button-taken:disabled,
@@ -406,9 +551,9 @@ textarea {
   align-items: center;
   gap: 7px;
   padding-top: 12px;
-  margin-top: 12px;
-  border-top: 1px solid var(--border);
-  color: #63736a;
+  margin-top: 14px;
+  border-top: 1px dashed var(--border-strong);
+  color: var(--muted);
   font-size: 12px;
 }
 
@@ -416,22 +561,25 @@ textarea {
   color: var(--green-dark);
 }
 
-/* ESTADOS VAZIOS */
+/* ==========================================================
+   ESTADOS VAZIOS
+   ========================================================== */
 
 .today-empty,
 .empty-state {
   text-align: center;
-  padding: 30px 18px;
+  padding: 36px 20px;
   color: var(--muted);
-  background: #f8faf9;
-  border: 1px dashed #dce6df;
-  border-radius: 13px;
+  background: var(--surface-alt);
+  border: 1.5px dashed var(--border-strong);
+  border-radius: var(--radius-md);
 }
 
 .today-empty strong {
   display: block;
   margin-top: 8px;
   color: var(--text);
+  font-size: 16px;
 }
 
 .add-medication-button {
@@ -442,12 +590,14 @@ textarea {
   margin: 0 0 22px;
 }
 
-/* FORMULÁRIO */
+/* ==========================================================
+   FORMULÁRIO DE MEDICAMENTO
+   ========================================================== */
 
 .form-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 5px 16px;
+  gap: 4px 18px;
 }
 
 .field-full {
@@ -456,9 +606,10 @@ textarea {
 
 .field-help {
   display: block;
-  margin-top: 5px;
+  margin-top: 6px;
   color: var(--muted);
-  font-size: 11px;
+  font-size: 12px;
+  font-weight: 500;
 }
 
 .schedule-header {
@@ -466,11 +617,14 @@ textarea {
   align-items: center;
   justify-content: space-between;
   gap: 15px;
-  margin: 25px 0 12px;
+  margin: 28px 0 14px;
+  padding-top: 22px;
+  border-top: 1px solid var(--border);
 }
 
 .schedule-header h3 {
   margin: 0 0 3px;
+  font-size: 17px;
 }
 
 .schedule-header p {
@@ -482,38 +636,50 @@ textarea {
   grid-template-columns: 1fr 1fr auto;
   align-items: end;
   gap: 12px;
-  padding: 12px;
-  background: #f7faf8;
+  padding: 14px;
+  background: var(--surface-alt);
   border: 1px solid var(--border);
-  border-radius: 12px;
+  border-radius: var(--radius-md);
   margin-bottom: 10px;
 }
 
+.schedule-row label {
+  margin-top: 0;
+}
+
 .remove-schedule {
-  min-height: 43px;
-  padding: 8px 12px;
+  min-height: 46px;
+  padding: 8px 14px;
   border: 0;
-  border-radius: 9px;
-  background: #fff0f0;
-  color: #b52d2d;
+  border-radius: var(--radius-sm);
+  background: var(--red-bg);
+  color: #b02a2a;
   font-weight: 800;
+  transition: background .15s;
+}
+
+.remove-schedule:hover {
+  background: #fbe3e1;
 }
 
 .form-actions {
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
-  margin-top: 22px;
+  margin-top: 24px;
 }
 
-/* LISTA DE MEDICAMENTOS */
+/* ==========================================================
+   LISTA DE MEDICAMENTOS
+   ========================================================== */
 
 .count-badge {
   display: grid;
   place-items: center;
-  min-width: 35px;
-  height: 35px;
-  border-radius: 50%;
+  min-width: 36px;
+  height: 36px;
+  padding: 0 8px;
+  border-radius: 999px;
   background: var(--green-light);
   color: var(--green-dark);
   font-weight: 900;
@@ -522,7 +688,7 @@ textarea {
 .medication-list {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 13px;
+  gap: 14px;
 }
 
 .medication-item-top {
@@ -534,7 +700,7 @@ textarea {
 .medication-meta {
   display: grid;
   gap: 8px;
-  color: #65736b;
+  color: var(--text-soft);
   font-size: 13px;
   margin-top: 12px;
 }
@@ -542,32 +708,40 @@ textarea {
 .item-actions {
   display: flex;
   flex-wrap: wrap;
-  gap: 7px;
+  gap: 8px;
   margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
 }
 
 .item-actions button {
-  padding: 8px 11px;
+  padding: 9px 13px;
   border: 0;
-  border-radius: 8px;
-  font-size: 12px;
+  border-radius: 9px;
+  font-size: 12.5px;
   font-weight: 800;
+  transition: filter .15s, transform .15s;
+}
+
+.item-actions button:hover {
+  filter: brightness(.96);
+  transform: translateY(-1px);
 }
 
 .edit-button,
 .restock-button {
-  background: #eaf5ee;
+  background: var(--green-light);
   color: var(--green-dark);
 }
 
 .pause-button {
-  background: #fff5df;
-  color: #96610b;
+  background: var(--amber-bg);
+  color: #8a5608;
 }
 
 .complete-button {
-  background: #edf1f3;
-  color: #52616a;
+  background: var(--blue-gray-bg);
+  color: var(--blue-gray);
 }
 
 .stock-empty {
@@ -580,24 +754,30 @@ textarea {
   font-weight: 900;
 }
 
-/* REPOSIÇÃO */
+/* ==========================================================
+   REPOSIÇÃO
+   ========================================================== */
 
 .restock-panel {
-  border-left: 4px solid var(--green);
+  border-left: 5px solid var(--green);
 }
 
-/* AVISO */
+/* ==========================================================
+   AVISO
+   ========================================================== */
 
 .disclaimer {
   max-width: 800px;
-  margin: 25px auto;
+  margin: 28px auto;
   text-align: center;
-  color: #829087;
+  color: #7d8c83;
   font-size: 12px;
-  line-height: 1.6;
+  line-height: 1.65;
 }
 
-/* MENSAGENS */
+/* ==========================================================
+   MENSAGENS (TOAST)
+   ========================================================== */
 
 .toast {
   position: fixed;
@@ -607,12 +787,13 @@ textarea {
   transform: translate(-50%, 20px);
   opacity: 0;
   pointer-events: none;
-  background: #263b32;
-  color: white;
-  border-radius: 11px;
-  padding: 13px 19px;
-  box-shadow: 0 8px 25px rgba(0,0,0,.15);
-  transition: .25s ease;
+  background: #1f3329;
+  color: #fff;
+  border-radius: var(--radius-md);
+  padding: 14px 20px;
+  font-weight: 700;
+  box-shadow: var(--shadow-lg);
+  transition: opacity .25s ease, transform .25s ease;
   max-width: calc(100% - 30px);
   text-align: center;
 }
@@ -623,18 +804,20 @@ textarea {
 }
 
 .toast.error {
-  background: #b52d2d;
+  background: #b02a2a;
 }
 
-/* RESUMO DIÁRIO */
+/* ==========================================================
+   RESUMO DIÁRIO
+   ========================================================== */
 
 .dose-daily-summary {
-  background: #ffffff;
-  border: 1px solid #e5e9e7;
-  border-radius: 16px;
-  padding: 18px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 20px;
   margin-bottom: 22px;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, .035);
+  box-shadow: var(--shadow);
 }
 
 .dose-summary-title {
@@ -642,8 +825,9 @@ textarea {
   align-items: center;
   gap: 9px;
   font-size: 16px;
-  margin-bottom: 15px;
-  color: #263b32;
+  font-weight: 800;
+  margin-bottom: 16px;
+  color: var(--text);
 }
 
 .dose-summary-grid {
@@ -657,53 +841,60 @@ textarea {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 5px;
-  padding: 13px 6px;
-  border-radius: 12px;
+  gap: 4px;
+  padding: 14px 6px;
+  border-radius: var(--radius-md);
   text-align: center;
 }
 
 .dose-summary-item strong {
-  font-size: 25px;
+  font-size: 28px;
+  line-height: 1;
   font-weight: 900;
+  font-variant-numeric: tabular-nums;
 }
 
 .dose-summary-item span {
   font-size: 12px;
-  font-weight: 700;
+  font-weight: 800;
 }
 
 .summary-taken {
-  background: #e9f7ef;
-  color: #16834a;
+  background: #e8f6ed;
+  color: #0f7a46;
 }
 
 .summary-not-taken {
-  background: #fff0f0;
-  color: #c62828;
+  background: var(--red-bg);
+  color: var(--red);
 }
 
 .summary-overdue {
-  background: #fff1e6;
-  color: #c45b13;
+  background: var(--orange-bg);
+  color: var(--orange);
 }
 
 .summary-waiting {
-  background: #eef3f7;
-  color: #526779;
+  background: var(--blue-gray-bg);
+  color: var(--blue-gray);
 }
 
-/* DOSE ATRASADA */
+/* ==========================================================
+   ESTADOS DA DOSE
+   ========================================================== */
+
+/* Atrasada */
 
 .today-dose.status-overdue {
-  background: #fff8f7;
-  border: 2px solid #dc5555;
-  border-left: 6px solid #dc3333;
-  box-shadow: 0 5px 16px rgba(220, 51, 51, .09);
+  background: #fffaf9;
+  border-color: #efb3ae;
+  border-left: 6px solid #dc3a3a;
+  box-shadow: 0 6px 18px rgba(220, 58, 58, .09);
 }
 
 .today-dose.status-overdue .today-dose-state {
-  color: #c62828;
+  color: #b82424;
+  background: #fde7e5;
   font-weight: 900;
 }
 
@@ -711,18 +902,19 @@ textarea {
   display: flex;
   align-items: flex-start;
   gap: 12px;
-  margin: 13px 0;
+  margin: 14px 0;
   padding: 14px;
-  background: #fee9e7;
-  border: 1px solid #f6c3be;
-  border-radius: 12px;
-  color: #a51f1f;
-  animation: doseAlert 2s ease-in-out infinite;
+  background: #fdeceb;
+  border: 1px solid var(--red-border);
+  border-radius: var(--radius-md);
+  color: #9c1f1f;
+  animation: doseAlert 2.4s ease-in-out infinite;
 }
 
 .dose-overdue-icon {
-  font-size: 25px;
+  font-size: 24px;
   flex-shrink: 0;
+  line-height: 1.2;
 }
 
 .dose-overdue-content {
@@ -747,16 +939,17 @@ textarea {
   opacity: .85;
 }
 
-/* DOSE NÃO TOMADA */
+/* Não tomada */
 
 .today-dose.status-not_taken {
-  background: #fff6f6;
-  border: 1px solid #e8a2a2;
-  border-left: 5px solid #c62828;
+  background: #fff8f8;
+  border-color: #ebbcbc;
+  border-left: 5px solid var(--red);
 }
 
 .today-dose.status-not_taken .today-dose-state {
-  color: #c62828;
+  color: var(--red);
+  background: #fde7e5;
   font-weight: 900;
 }
 
@@ -764,11 +957,11 @@ textarea {
   display: flex;
   flex-direction: column;
   gap: 5px;
-  padding: 12px;
+  padding: 12px 14px;
   margin: 12px 0;
-  border-radius: 10px;
-  background: #fee9e9;
-  color: #a51f1f;
+  border-radius: var(--radius-sm);
+  background: #fdeceb;
+  color: #9c1f1f;
   font-size: 13px;
 }
 
@@ -776,47 +969,58 @@ textarea {
   font-weight: 900;
 }
 
-/* DOSE TOMADA */
+/* Tomada */
 
 .today-dose.status-taken {
+  background: #f7fcf9;
+  border-color: #d3ecdc;
   border-left: 5px solid #20a464;
 }
 
 .today-dose.status-taken .today-dose-state {
-  color: #16834a;
+  color: #0f7a46;
+  background: #dff3e7;
   font-weight: 900;
 }
 
 @keyframes doseAlert {
   0%, 100% {
-    box-shadow: 0 0 0 rgba(220, 51, 51, 0);
+    box-shadow: 0 0 0 rgba(220, 58, 58, 0);
   }
 
   50% {
-    box-shadow: 0 0 12px rgba(220, 51, 51, .12);
+    box-shadow: 0 0 14px rgba(220, 58, 58, .14);
   }
 }
 
-/* NOTEBOOK E TABLET */
+/* ==========================================================
+   NOTEBOOK E TABLET
+   ========================================================== */
 
 @media (min-width: 701px) {
   .today-section,
-  .panel,
+  .panel {
+    padding: 30px;
+  }
+
   .welcome {
-    padding: 28px;
+    padding: 28px 32px 28px 36px;
   }
 
   .medication-item {
-    transition: transform .18s ease, box-shadow .18s ease;
+    transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
   }
 
   .medication-item:hover {
     transform: translateY(-2px);
-    box-shadow: 0 8px 20px rgba(30, 60, 45, .07);
+    border-color: var(--border-strong);
+    box-shadow: var(--shadow-lg);
   }
 }
 
-/* CELULAR */
+/* ==========================================================
+   CELULAR
+   ========================================================== */
 
 @media (max-width: 700px) {
   .page {
@@ -830,12 +1034,12 @@ textarea {
   }
 
   .brand {
-    font-size: 19px;
+    font-size: 18px;
   }
 
   .auth-card {
     margin: 20px auto;
-    padding: 23px 18px;
+    padding: 26px 20px;
   }
 
   .auth-intro h1 {
@@ -843,10 +1047,14 @@ textarea {
   }
 
   .today-section,
-  .panel,
-  .welcome {
+  .panel {
     padding: 18px;
-    border-radius: 15px;
+    border-radius: var(--radius-md);
+  }
+
+  .welcome {
+    padding: 20px 18px 20px 24px;
+    border-radius: var(--radius-md);
   }
 
   .welcome h1 {
@@ -882,15 +1090,15 @@ textarea {
   }
 
   .dose-summary-item {
-    padding: 12px 5px;
+    padding: 13px 5px;
   }
 
   .dose-summary-item strong {
-    font-size: 23px;
+    font-size: 25px;
   }
 
   .dose-overdue-alert {
-    padding: 11px;
+    padding: 12px;
   }
 
   .today-dose-actions {
@@ -915,13 +1123,16 @@ textarea {
   }
 }
 
-/* ACESSIBILIDADE */
+/* ==========================================================
+   ACESSIBILIDADE
+   ========================================================== */
 
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
   *::after {
     animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
     transition-duration: .01ms !important;
     scroll-behavior: auto !important;
   }
