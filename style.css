@@ -921,3 +921,35 @@ textarea:focus {
     animation-duration: .01ms !important;
   }
 }
+
+/* DATA DO DIA EM DESTAQUE */
+#todayDate {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  margin-top: 10px;
+  margin-bottom: 0;
+  padding: 10px 16px;
+  min-height: 42px;
+  border-radius: 12px;
+  background: #e5f4eb;
+  border: 1px solid #cce8d7;
+  color: #17664e;
+  font-size: 15px;
+  font-weight: 900;
+  letter-spacing: .2px;
+  box-shadow: 0 3px 10px rgba(37, 131, 101, .06);
+}
+
+#todayDate::before {
+  content: "📅";
+  font-size: 19px;
+}
+
+@media (max-width: 600px) {
+  #todayDate {
+    font-size: 15px;
+    padding: 11px 14px;
+    min-height: 44px;
+  }
+}
