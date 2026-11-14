@@ -149,28 +149,61 @@ function statusEmoji(status) {
    STATUS INTELIGENTE DAS DOSES
    ============================================================ */
 
+
 function getDoseDisplayStatus(schedule) {
   const status = schedule.doseStatus || "pending";
 
-  // Registros confirmados pelo paciente.
+  // Mantém os registros confirmados pelo paciente.
   if (status === "taken" || status === "not_taken") {
     return status;
   }
 
   const time = cleanTime(schedule.scheduled_time);
 
-  const scheduledTimestamp = Date.parse(
-    localScheduleTimestamp(todayLocalDate(), time)
+  if (!/^\d{2}:\d{2}$/.test(time)) {
+    return "pending";
+  }
+
+  const [hour, minute] = time.split(":").map(Number);
+
+  if (
+    hour < 0 || hour > 23 ||
+    minute < 0 || minute > 59
+  ) {
+    return "pending";
+  }
+
+  // Obtém a hora atual no fuso de São Paulo.
+  const nowParts = new Intl.DateTimeFormat("en-GB", {
+    timeZone: APP_TIMEZONE,
+    hour: "2-digit",
+    minute: "2-digit",
+    hourCycle: "h23"
+  }).formatToParts(new Date());
+
+  const values = Object.fromEntries(
+    nowParts.map(part => [part.type, part.value])
   );
 
-  // Horário ultrapassado sem confirmação.
-  // Não grava nada automaticamente no banco.
-  if (Date.now() >= scheduledTimestamp) {
+  const currentMinutes =
+    Number(values.hour) * 60 +
+    Number(values.minute);
+
+  const scheduledMinutes =
+    hour * 60 + minute;
+
+  // Só destaca como atrasada após 30 minutos.
+  const gracePeriod = 30;
+
+  if (
+    currentMinutes >= scheduledMinutes + gracePeriod
+  ) {
     return "overdue";
   }
 
   return "pending";
 }
+
 
 /* ============================================================
    MENSAGENS
