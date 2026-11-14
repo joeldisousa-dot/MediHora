@@ -30,13 +30,20 @@ const supabaseClient = window.supabase.createClient(
 let currentUser = null;
 let medications = [];
 let schedulesByMedication = {};
+
 let editingMedicationId = null;
 let restockMedicationId = null;
+
 let toastTimeout = null;
+
 let savingMedication = false;
 let savingRestock = false;
+
 let recoveryMode = false;
+
 let applicationLoading = false;
+let applicationPromise = null;
+let applicationUserId = null;
 
 let doseClockInterval = null;
 let lastLoadedLocalDate = null;
@@ -76,7 +83,10 @@ function todayLocalDate() {
 
 function nextDate(dateString) {
   const [year, month, day] = dateString.split("-").map(Number);
-  const date = new Date(Date.UTC(year, month - 1, day + 1));
+
+  const date = new Date(
+    Date.UTC(year, month - 1, day + 1)
+  );
 
   return [
     date.getUTCFullYear(),
@@ -103,11 +113,14 @@ function formatDate(dateString) {
 
   const [year, month, day] = dateString.split("-").map(Number);
 
-  return new Date(year, month - 1, day).toLocaleDateString("pt-BR", {
-    day: "2-digit",
-    month: "long",
-    year: "numeric"
-  });
+  return new Date(year, month - 1, day).toLocaleDateString(
+    "pt-BR",
+    {
+      day: "2-digit",
+      month: "long",
+      year: "numeric"
+    }
+  );
 }
 
 function formatQuantity(value) {
@@ -135,6 +148,7 @@ function periodEmoji(time) {
 
   if (hour >= 6 && hour < 12) return "☀️";
   if (hour >= 12 && hour < 18) return "🌤️";
+
   return "🌙";
 }
 
@@ -142,6 +156,7 @@ function statusEmoji(status) {
   if (status === "taken") return "💎";
   if (status === "not_taken") return "😟";
   if (status === "overdue") return "⚠️";
+
   return "⏳";
 }
 
@@ -149,11 +164,9 @@ function statusEmoji(status) {
    STATUS INTELIGENTE DAS DOSES
    ============================================================ */
 
-
 function getDoseDisplayStatus(schedule) {
   const status = schedule.doseStatus || "pending";
 
-  // Mantém os registros confirmados pelo paciente.
   if (status === "taken" || status === "not_taken") {
     return status;
   }
@@ -173,7 +186,6 @@ function getDoseDisplayStatus(schedule) {
     return "pending";
   }
 
-  // Obtém a hora atual no fuso de São Paulo.
   const nowParts = new Intl.DateTimeFormat("en-GB", {
     timeZone: APP_TIMEZONE,
     hour: "2-digit",
@@ -192,18 +204,15 @@ function getDoseDisplayStatus(schedule) {
   const scheduledMinutes =
     hour * 60 + minute;
 
-  // Só destaca como atrasada após 30 minutos.
+  // A dose só fica atrasada após 30 minutos.
   const gracePeriod = 30;
 
-  if (
-    currentMinutes >= scheduledMinutes + gracePeriod
-  ) {
+  if (currentMinutes >= scheduledMinutes + gracePeriod) {
     return "overdue";
   }
 
   return "pending";
 }
-
 
 /* ============================================================
    MENSAGENS
@@ -269,7 +278,9 @@ async function handleRegister(event) {
       email,
       password,
       options: {
-        data: { full_name: name },
+        data: {
+          full_name: name
+        },
         emailRedirectTo:
           window.location.origin + window.location.pathname
       }
@@ -279,6 +290,7 @@ async function handleRegister(event) {
 
     if (data.session && data.user) {
       await showApplication(data.user);
+
       showMessage("Conta criada com sucesso!");
     } else {
       showMessage(
@@ -287,6 +299,7 @@ async function handleRegister(event) {
 
       showAuthPanel("loginPanel");
     }
+
   } catch (error) {
     console.error("Erro no cadastro:", error);
 
@@ -297,17 +310,35 @@ async function handleRegister(event) {
   }
 }
 
+/* ============================================================
+   LOGIN CORRIGIDO
+   ============================================================ */
+
 async function handleLogin(event) {
   event.preventDefault();
 
   if (recoveryMode) {
-    showMessage("Conclua primeiro a alteração da sua senha.", true);
+    showMessage(
+      "Conclua primeiro a alteração da sua senha.",
+      true
+    );
     return;
   }
 
   const email = $("loginEmail").value.trim();
   const password = $("loginPassword").value;
-  const button = $("loginForm").querySelector('button[type="submit"]');
+
+  const button = $("loginForm").querySelector(
+    'button[type="submit"]'
+  );
+
+  if (!email || !password) {
+    showMessage(
+      "Informe seu e-mail e sua senha.",
+      true
+    );
+    return;
+  }
 
   button.disabled = true;
   button.textContent = "Entrando...";
@@ -321,14 +352,37 @@ async function handleLogin(event) {
 
     if (error) throw error;
 
-    await showApplication(data.user);
+    let authenticatedUser =
+      data?.user || data?.session?.user;
+
+    // Confere novamente a sessão se o retorno não trouxe usuário.
+    if (!authenticatedUser) {
+      const { data: sessionData, error: sessionError } =
+        await supabaseClient.auth.getSession();
+
+      if (sessionError) throw sessionError;
+
+      authenticatedUser = sessionData.session?.user;
+    }
+
+    if (!authenticatedUser) {
+      throw new Error(
+        "O login foi realizado, mas não foi possível recuperar sua sessão."
+      );
+    }
+
+    recoveryMode = false;
+
+    await showApplication(authenticatedUser);
+
     showMessage("Bem-vindo(a) ao MediHora!");
 
   } catch (error) {
     console.error("Erro no login:", error);
 
     showMessage(
-      error.message || "E-mail ou senha inválidos.",
+      error.message ||
+        "Não foi possível entrar. Confira seu e-mail e sua senha.",
       true
     );
 
@@ -337,6 +391,10 @@ async function handleLogin(event) {
     button.textContent = "Entrar";
   }
 }
+
+/* ============================================================
+   RECUPERAÇÃO DE SENHA
+   ============================================================ */
 
 async function handleRecovery(event) {
   event.preventDefault();
@@ -369,7 +427,7 @@ async function handleRecovery(event) {
 }
 
 /* ============================================================
-   RECUPERAÇÃO E ALTERAÇÃO DE SENHA
+   ALTERAÇÃO DE SENHA
    ============================================================ */
 
 function openPasswordResetScreen() {
@@ -382,7 +440,10 @@ function openPasswordResetScreen() {
 
   showAuthPanel("passwordResetPanel");
 
-  if ($("newPassword")) $("newPassword").value = "";
+  if ($("newPassword")) {
+    $("newPassword").value = "";
+  }
+
   if ($("confirmNewPassword")) {
     $("confirmNewPassword").value = "";
   }
@@ -397,24 +458,34 @@ async function handlePasswordUpdate(event) {
   const confirmation = $("confirmNewPassword").value;
 
   if (password.length < 6) {
-    showMessage("A senha deve ter pelo menos 6 caracteres.", true);
+    showMessage(
+      "A senha deve ter pelo menos 6 caracteres.",
+      true
+    );
     return;
   }
 
   if (password !== confirmation) {
-    showMessage("As senhas informadas são diferentes.", true);
+    showMessage(
+      "As senhas informadas são diferentes.",
+      true
+    );
     return;
   }
 
   const button =
-    $("passwordResetForm").querySelector('button[type="submit"]');
+    $("passwordResetForm").querySelector(
+      'button[type="submit"]'
+    );
 
   button.disabled = true;
   button.textContent = "Salvando...";
 
   try {
     const { error } =
-      await supabaseClient.auth.updateUser({ password });
+      await supabaseClient.auth.updateUser({
+        password
+      });
 
     if (error) throw error;
 
@@ -434,7 +505,10 @@ async function handlePasswordUpdate(event) {
     $("confirmNewPassword").value = "";
 
     showLoginScreen();
-    showMessage("Nova senha cadastrada! Entre com sua nova senha.");
+
+    showMessage(
+      "Nova senha cadastrada! Entre com sua nova senha."
+    );
 
   } catch (error) {
     console.error("Erro ao atualizar senha:", error);
@@ -451,6 +525,10 @@ async function handlePasswordUpdate(event) {
   }
 }
 
+/* ============================================================
+   SAIR DA CONTA
+   ============================================================ */
+
 async function logout() {
   try {
     const { error } = await supabaseClient.auth.signOut();
@@ -460,10 +538,18 @@ async function logout() {
     currentUser = null;
     medications = [];
     schedulesByMedication = {};
+
     restockMedicationId = null;
+    editingMedicationId = null;
+
     lastLoadedLocalDate = null;
 
+    applicationPromise = null;
+    applicationUserId = null;
+    applicationLoading = false;
+
     showLoginScreen();
+
     showMessage("Você saiu da sua conta.");
 
   } catch (error) {
@@ -477,41 +563,67 @@ async function logout() {
 }
 
 /* ============================================================
-   ABRIR A ÁREA PESSOAL
+   ABRIR A ÁREA PESSOAL — CORRIGIDO
    ============================================================ */
 
 async function showApplication(user) {
-  if (!user || recoveryMode || applicationLoading) return;
+  if (!user || recoveryMode) return;
 
+  currentUser = user;
+
+  // A área pessoal aparece imediatamente.
+  $("authSection")?.classList.add("hidden");
+  $("appSection")?.classList.remove("hidden");
+  $("logoutButton")?.classList.remove("hidden");
+
+  const metadata = user.user_metadata || {};
+
+  const displayName =
+    metadata.full_name ||
+    user.email?.split("@")[0] ||
+    "bem-vindo(a)";
+
+  if ($("userName")) {
+    $("userName").textContent = displayName;
+  }
+
+  if ($("medicationStartDate")) {
+    $("medicationStartDate").value = todayLocalDate();
+  }
+
+  // Evita duas consultas simultâneas para o mesmo usuário.
+  if (
+    applicationPromise &&
+    applicationUserId === user.id
+  ) {
+    return applicationPromise;
+  }
+
+  applicationUserId = user.id;
   applicationLoading = true;
 
-  try {
-    currentUser = user;
+  applicationPromise = (async () => {
+    try {
+      await loadMedications();
 
-    $("authSection")?.classList.add("hidden");
-    $("appSection")?.classList.remove("hidden");
-    $("logoutButton")?.classList.remove("hidden");
+    } catch (error) {
+      console.error(
+        "Erro ao carregar a área pessoal:",
+        error
+      );
 
-    const metadata = user.user_metadata || {};
+      showMessage(
+        "Sua conta foi acessada, mas houve um problema ao carregar os medicamentos.",
+        true
+      );
 
-    const displayName =
-      metadata.full_name ||
-      user.email?.split("@")[0] ||
-      "bem-vindo(a)";
-
-    if ($("userName")) {
-      $("userName").textContent = displayName;
+    } finally {
+      applicationLoading = false;
+      applicationPromise = null;
     }
+  })();
 
-    if ($("medicationStartDate")) {
-      $("medicationStartDate").value = todayLocalDate();
-    }
-
-    await loadMedications();
-
-  } finally {
-    applicationLoading = false;
-  }
+  return applicationPromise;
 }
 
 /* ============================================================
@@ -520,6 +632,7 @@ async function showApplication(user) {
 
 function addScheduleRow(time = "", quantity = "1") {
   const container = $("scheduleList");
+
   if (!container) return;
 
   const row = document.createElement("div");
@@ -528,6 +641,7 @@ function addScheduleRow(time = "", quantity = "1") {
   row.innerHTML = `
     <div>
       <label>Horário</label>
+
       <input
         class="schedule-time"
         type="time"
@@ -538,6 +652,7 @@ function addScheduleRow(time = "", quantity = "1") {
 
     <div>
       <label>Quantidade por horário</label>
+
       <input
         class="schedule-quantity"
         type="number"
@@ -553,16 +668,22 @@ function addScheduleRow(time = "", quantity = "1") {
     </button>
   `;
 
-  row.querySelector(".remove-schedule").addEventListener("click", () => {
-    const rows = container.querySelectorAll(".schedule-row");
+  row.querySelector(".remove-schedule").addEventListener(
+    "click",
+    () => {
+      const rows = container.querySelectorAll(".schedule-row");
 
-    if (rows.length <= 1) {
-      showMessage("Mantenha pelo menos um horário.", true);
-      return;
+      if (rows.length <= 1) {
+        showMessage(
+          "Mantenha pelo menos um horário.",
+          true
+        );
+        return;
+      }
+
+      row.remove();
     }
-
-    row.remove();
-  });
+  );
 
   container.appendChild(row);
 }
@@ -572,14 +693,17 @@ function resetMedicationForm() {
 
   $("medicationForm")?.reset();
 
-  if ($("medicationId")) $("medicationId").value = "";
+  if ($("medicationId")) {
+    $("medicationId").value = "";
+  }
 
   if ($("formTitle")) {
     $("formTitle").textContent = "Novo medicamento";
   }
 
   if ($("saveMedicationButton")) {
-    $("saveMedicationButton").textContent = "Salvar medicamento";
+    $("saveMedicationButton").textContent =
+      "Salvar medicamento";
   }
 
   if ($("medicationStartDate")) {
@@ -603,7 +727,9 @@ function resetMedicationForm() {
     "medicationPrescribedDays"
   );
 
-  if (daysField) daysField.value = "";
+  if (daysField) {
+    daysField.value = "";
+  }
 
   if ($("scheduleList")) {
     $("scheduleList").innerHTML = "";
@@ -630,7 +756,9 @@ function closeMedicationForm() {
 }
 
 function editMedication(id) {
-  const medication = medications.find(item => item.id === id);
+  const medication = medications.find(
+    item => item.id === id
+  );
 
   if (!medication) return;
 
@@ -649,6 +777,7 @@ function editMedication(id) {
   $("medicationId").value = medication.id;
   $("medicationName").value = medication.name || "";
   $("medicationDose").value = medication.dose || "";
+
   $("medicationInstructions").value =
     medication.instructions || "";
 
@@ -676,7 +805,8 @@ function editMedication(id) {
   }
 
   $("formTitle").textContent = "Editar medicamento";
-  $("saveMedicationButton").textContent = "Salvar alterações";
+  $("saveMedicationButton").textContent =
+    "Salvar alterações";
 
   $("scheduleList").innerHTML = "";
 
@@ -715,6 +845,7 @@ async function saveMedication(event) {
 
   const name = $("medicationName").value.trim();
   const dose = $("medicationDose").value.trim();
+
   const instructions =
     $("medicationInstructions").value.trim();
 
@@ -726,7 +857,8 @@ async function saveMedication(event) {
     "medicationPrescribedDays"
   );
 
-  const prescribedDays = daysValue ? Number(daysValue) : 0;
+  const prescribedDays =
+    daysValue ? Number(daysValue) : 0;
 
   const stockQuantity =
     Number($("medicationStock").value || 0);
@@ -745,8 +877,14 @@ async function saveMedication(event) {
     return;
   }
 
-  if (!Number.isFinite(stockQuantity) || stockQuantity < 0) {
-    showMessage("O estoque não pode ser negativo.", true);
+  if (
+    !Number.isFinite(stockQuantity) ||
+    stockQuantity < 0
+  ) {
+    showMessage(
+      "O estoque não pode ser negativo.",
+      true
+    );
     return;
   }
 
@@ -766,7 +904,9 @@ async function saveMedication(event) {
   ];
 
   const schedules = scheduleRows.map(row => ({
-    scheduled_time: row.querySelector(".schedule-time").value,
+    scheduled_time:
+      row.querySelector(".schedule-time").value,
+
     dose_quantity: Number(
       row.querySelector(".schedule-quantity").value || 1
     )
@@ -791,7 +931,9 @@ async function saveMedication(event) {
     item => item.scheduled_time
   );
 
-  if (new Set(uniqueTimes).size !== uniqueTimes.length) {
+  if (
+    new Set(uniqueTimes).size !== uniqueTimes.length
+  ) {
     showMessage(
       "Não repita o mesmo horário no cadastro.",
       true
@@ -802,6 +944,7 @@ async function saveMedication(event) {
   savingMedication = true;
 
   const button = $("saveMedicationButton");
+
   button.disabled = true;
   button.textContent = "Salvando...";
 
@@ -818,7 +961,9 @@ async function saveMedication(event) {
         throw new Error("Medicamento não encontrado.");
       }
 
-      previousStock = Number(existing.stock_quantity || 0);
+      previousStock = Number(
+        existing.stock_quantity || 0
+      );
 
       const { error } = await supabaseClient
         .from("medications")
@@ -864,18 +1009,22 @@ async function saveMedication(event) {
     }
 
     /* Ajuste manual de estoque na edição. */
-    if (wasEditing && stockQuantity !== previousStock) {
+    if (
+      wasEditing &&
+      stockQuantity !== previousStock
+    ) {
       const difference = stockQuantity - previousStock;
 
-      const { error: movementError } = await supabaseClient
-        .from("stock_movements")
-        .insert({
-          user_id: currentUser.id,
-          medication_id: medicationId,
-          movement_type: difference > 0 ? "in" : "out",
-          quantity: Math.abs(difference),
-          note: "Ajuste manual de estoque"
-        });
+      const { error: movementError } =
+        await supabaseClient
+          .from("stock_movements")
+          .insert({
+            user_id: currentUser.id,
+            medication_id: medicationId,
+            movement_type: difference > 0 ? "in" : "out",
+            quantity: Math.abs(difference),
+            note: "Ajuste manual de estoque"
+          });
 
       if (movementError) {
         console.warn(
@@ -947,7 +1096,9 @@ async function saveMedication(event) {
     if (schedulesToDisable.length) {
       const { error } = await supabaseClient
         .from("medication_schedules")
-        .update({ enabled: false })
+        .update({
+          enabled: false
+        })
         .in("id", schedulesToDisable)
         .eq("user_id", currentUser.id);
 
@@ -955,6 +1106,7 @@ async function saveMedication(event) {
     }
 
     $("medicationPanel").classList.add("hidden");
+
     resetMedicationForm();
 
     await loadMedications();
@@ -990,7 +1142,10 @@ function openRestockForm(medicationId) {
   );
 
   if (!medication) {
-    showMessage("Medicamento não encontrado.", true);
+    showMessage(
+      "Medicamento não encontrado.",
+      true
+    );
     return;
   }
 
@@ -1004,6 +1159,7 @@ function openRestockForm(medicationId) {
     `${medication.stock_unit || "unidades"}`;
 
   $("restockForm").reset();
+
   $("restockPanel").classList.remove("hidden");
 
   $("restockPanel").scrollIntoView({
@@ -1018,6 +1174,7 @@ function closeRestockForm(scroll = false) {
   if (!$("restockPanel")) return;
 
   $("restockPanel").classList.add("hidden");
+
   $("restockForm")?.reset();
 
   restockMedicationId = null;
@@ -1033,17 +1190,26 @@ function closeRestockForm(scroll = false) {
 async function saveRestock(event) {
   event.preventDefault();
 
-  if (!currentUser || !restockMedicationId || savingRestock) {
+  if (
+    !currentUser ||
+    !restockMedicationId ||
+    savingRestock
+  ) {
     return;
   }
 
-  const quantity = Number($("restockQuantity").value);
+  const quantity = Number(
+    $("restockQuantity").value
+  );
 
   const note =
     $("restockNote").value.trim() ||
     "Reposição de estoque";
 
-  if (!Number.isFinite(quantity) || quantity <= 0) {
+  if (
+    !Number.isFinite(quantity) ||
+    quantity <= 0
+  ) {
     showMessage(
       "Informe uma quantidade maior que zero.",
       true
@@ -1054,6 +1220,7 @@ async function saveRestock(event) {
   savingRestock = true;
 
   const button = $("saveRestockButton");
+
   button.disabled = true;
   button.textContent = "Salvando...";
 
@@ -1072,6 +1239,7 @@ async function saveRestock(event) {
     if (error) throw error;
 
     closeRestockForm(false);
+
     await loadMedications();
 
     showMessage("Estoque adicionado com sucesso!");
@@ -1098,15 +1266,24 @@ async function saveRestock(event) {
 async function loadMedications() {
   if (!currentUser) return;
 
+  const userId = currentUser.id;
+
   try {
-    const { data: medicationData, error: medicationError } =
-      await supabaseClient
-        .from("medications")
-        .select("*")
-        .eq("user_id", currentUser.id)
-        .order("name", { ascending: true });
+    const {
+      data: medicationData,
+      error: medicationError
+    } = await supabaseClient
+      .from("medications")
+      .select("*")
+      .eq("user_id", userId)
+      .order("name", {
+        ascending: true
+      });
 
     if (medicationError) throw medicationError;
+
+    // Não aplica resposta antiga caso a conta tenha mudado.
+    if (!currentUser || currentUser.id !== userId) return;
 
     medications = medicationData || [];
     schedulesByMedication = {};
@@ -1116,16 +1293,22 @@ async function loadMedications() {
         item => item.id
       );
 
-      const { data: scheduleData, error: scheduleError } =
-        await supabaseClient
-          .from("medication_schedules")
-          .select("*")
-          .in("medication_id", medicationIds)
-          .eq("user_id", currentUser.id)
-          .eq("enabled", true)
-          .order("scheduled_time", { ascending: true });
+      const {
+        data: scheduleData,
+        error: scheduleError
+      } = await supabaseClient
+        .from("medication_schedules")
+        .select("*")
+        .in("medication_id", medicationIds)
+        .eq("user_id", userId)
+        .eq("enabled", true)
+        .order("scheduled_time", {
+          ascending: true
+        });
 
       if (scheduleError) throw scheduleError;
+
+      if (!currentUser || currentUser.id !== userId) return;
 
       (scheduleData || []).forEach(schedule => {
         if (!schedulesByMedication[schedule.medication_id]) {
@@ -1148,19 +1331,23 @@ async function loadMedications() {
     if (allSchedules.length) {
       const bounds = localDayBounds();
 
-      const { data: logs, error: logsError } =
-        await supabaseClient
-          .from("dose_logs")
-          .select("schedule_id,status,scheduled_for")
-          .in(
-            "schedule_id",
-            allSchedules.map(item => item.id)
-          )
-          .eq("user_id", currentUser.id)
-          .gte("scheduled_for", bounds.start)
-          .lt("scheduled_for", bounds.end);
+      const {
+        data: logs,
+        error: logsError
+      } = await supabaseClient
+        .from("dose_logs")
+        .select("schedule_id,status,scheduled_for")
+        .in(
+          "schedule_id",
+          allSchedules.map(item => item.id)
+        )
+        .eq("user_id", userId)
+        .gte("scheduled_for", bounds.start)
+        .lt("scheduled_for", bounds.end);
 
       if (logsError) throw logsError;
+
+      if (!currentUser || currentUser.id !== userId) return;
 
       const statusBySchedule = new Map(
         (logs || []).map(log => [
@@ -1187,7 +1374,10 @@ async function loadMedications() {
     renderTodayMedications();
 
   } catch (error) {
-    console.error("Erro ao carregar medicamentos:", error);
+    console.error(
+      "Erro ao carregar medicamentos:",
+      error
+    );
 
     showMessage(
       error.message || "Erro ao carregar seus medicamentos.",
@@ -1201,23 +1391,34 @@ async function loadMedications() {
    ============================================================ */
 
 function isMedicationScheduledToday(medication) {
-  if (medication.status !== "active") return false;
-
-  const today = todayLocalDate();
-
-  if (medication.start_date && medication.start_date > today) {
+  if (medication.status !== "active") {
     return false;
   }
 
-  const days = Number(medication.prescribed_days || 0);
+  const today = todayLocalDate();
+
+  if (
+    medication.start_date &&
+    medication.start_date > today
+  ) {
+    return false;
+  }
+
+  const days = Number(
+    medication.prescribed_days || 0
+  );
 
   if (medication.start_date && days > 0) {
     const [year, month, day] =
       medication.start_date.split("-").map(Number);
 
-    const end = new Date(Date.UTC(year, month - 1, day));
+    const end = new Date(
+      Date.UTC(year, month - 1, day)
+    );
 
-    end.setUTCDate(end.getUTCDate() + days - 1);
+    end.setUTCDate(
+      end.getUTCDate() + days - 1
+    );
 
     const endDate = [
       end.getUTCFullYear(),
@@ -1225,18 +1426,21 @@ function isMedicationScheduledToday(medication) {
       String(end.getUTCDate()).padStart(2, "0")
     ].join("-");
 
-    if (today > endDate) return false;
+    if (today > endDate) {
+      return false;
+    }
   }
 
   return true;
 }
 
 /* ============================================================
-   PAINEL INTELIGENTE DE MEDICAMENTOS DE HOJE
+   PAINEL DIÁRIO
    ============================================================ */
 
 function renderTodayMedications() {
   const container = $("todayMedicationList");
+
   if (!container) return;
 
   const items = medications
@@ -1252,16 +1456,20 @@ function renderTodayMedications() {
     container.innerHTML = `
       <div class="today-empty">
         <div style="font-size:32px">💊</div>
-        <strong>Nenhum medicamento programado para hoje.</strong>
+
+        <strong>
+          Nenhum medicamento programado para hoje.
+        </strong>
+
         <p>
           Cadastre um medicamento para visualizar seus horários aqui.
         </p>
       </div>
     `;
+
     return;
   }
 
-  /* Resumo diário. */
   const allDoses = items.flatMap(item =>
     item.schedules.map(schedule => ({
       schedule,
@@ -1330,7 +1538,11 @@ function renderTodayMedications() {
 
       const doseCards = schedules.map(schedule => {
         const status = getDoseDisplayStatus(schedule);
-        const time = cleanTime(schedule.scheduled_time);
+
+        const time = cleanTime(
+          schedule.scheduled_time
+        );
+
         const period = periodEmoji(time);
         const emoji = statusEmoji(status);
 
@@ -1344,47 +1556,71 @@ function renderTodayMedications() {
           statusText = "Dose não registrada";
         }
 
-        const overdueAlert = status === "overdue" ? `
-          <div class="dose-overdue-alert">
+        const overdueAlert =
+          status === "overdue"
+            ? `
+              <div class="dose-overdue-alert">
 
-            <div class="dose-overdue-icon">⚠️</div>
+                <div class="dose-overdue-icon">
+                  ⚠️
+                </div>
 
-            <div class="dose-overdue-content">
-              <strong>Atenção: horário ultrapassado!</strong>
+                <div class="dose-overdue-content">
 
-              <span>
-                Ainda não há confirmação de que este medicamento foi tomado.
-              </span>
+                  <strong>
+                    Atenção: horário ultrapassado!
+                  </strong>
 
-              <small>
-                Confirme abaixo o que aconteceu com esta dose.
-              </small>
-            </div>
+                  <span>
+                    Ainda não há confirmação de que este medicamento foi tomado.
+                  </span>
 
-          </div>
-        ` : "";
+                  <small>
+                    Confirme abaixo o que aconteceu com esta dose.
+                  </small>
 
-        const notTakenAlert = status === "not_taken" ? `
-          <div class="dose-not-taken-alert">
-            <strong>😟 Dose registrada como não tomada.</strong>
-            <span>
-              Este registro foi confirmado pelo paciente.
-            </span>
-          </div>
-        ` : "";
+                </div>
 
-        const stockInfo = status === "taken" ? `
-          <div class="dose-stock-info">
-            <span>📦</span>
-            <span>
-              Estoque restante:
-              <strong>
-                ${escapeHTML(currentStock)}
-                ${escapeHTML(stockUnit)}
-              </strong>
-            </span>
-          </div>
-        ` : "";
+              </div>
+            `
+            : "";
+
+        const notTakenAlert =
+          status === "not_taken"
+            ? `
+              <div class="dose-not-taken-alert">
+
+                <strong>
+                  😟 Dose registrada como não tomada.
+                </strong>
+
+                <span>
+                  Este registro foi confirmado pelo paciente.
+                </span>
+
+              </div>
+            `
+            : "";
+
+        const stockInfo =
+          status === "taken"
+            ? `
+              <div class="dose-stock-info">
+
+                <span>📦</span>
+
+                <span>
+                  Estoque restante:
+
+                  <strong>
+                    ${escapeHTML(currentStock)}
+                    ${escapeHTML(stockUnit)}
+                  </strong>
+                </span>
+
+              </div>
+            `
+            : "";
 
         return `
           <div class="today-dose status-${status}">
@@ -1455,18 +1691,23 @@ function renderTodayMedications() {
       return `
         <article class="today-medication-card">
 
-          <h3>${escapeHTML(medication.name)}</h3>
+          <h3>
+            ${escapeHTML(medication.name)}
+          </h3>
 
           <p class="medication-dose">
             ${escapeHTML(medication.dose)}
           </p>
 
           <div class="medication-stock-display">
+
             📦 Disponível:
+
             <strong>
               ${escapeHTML(currentStock)}
               ${escapeHTML(stockUnit)}
             </strong>
+
           </div>
 
           ${doseCards}
@@ -1511,7 +1752,10 @@ async function markDoseTaken(scheduleId, time) {
     );
 
   } catch (error) {
-    console.error("Erro ao registrar dose tomada:", error);
+    console.error(
+      "Erro ao registrar dose tomada:",
+      error
+    );
 
     showMessage(
       error.message || "Não foi possível registrar a dose.",
@@ -1603,10 +1847,15 @@ async function updateMedicationStatus(id, status) {
       completed: "concluído"
     };
 
-    showMessage(`Medicamento ${labels[status]}.`);
+    showMessage(
+      `Medicamento ${labels[status]}.`
+    );
 
   } catch (error) {
-    console.error("Erro ao alterar status:", error);
+    console.error(
+      "Erro ao alterar status:",
+      error
+    );
 
     showMessage(
       error.message || "Não foi possível atualizar o medicamento.",
@@ -1616,17 +1865,20 @@ async function updateMedicationStatus(id, status) {
 }
 
 /* ============================================================
-   CONTADORES E CÁLCULO DE ESTOQUE
+   CONTADORES E ESTOQUE
    ============================================================ */
 
 function updateCounters() {
   if ($("medicationCount")) {
-    $("medicationCount").textContent = medications.length;
+    $("medicationCount").textContent =
+      medications.length;
   }
 }
 
 function stockMessage(medication) {
-  const stock = Number(medication.stock_quantity || 0);
+  const stock = Number(
+    medication.stock_quantity || 0
+  );
 
   const dailySchedules =
     schedulesByMedication[medication.id] || [];
@@ -1638,18 +1890,25 @@ function stockMessage(medication) {
   );
 
   if (stock <= 0) {
-    return `<span class="stock-empty">Estoque esgotado</span>`;
+    return `
+      <span class="stock-empty">
+        Estoque esgotado
+      </span>
+    `;
   }
 
   if (dailyUse <= 0) {
-    return `Estoque atual: ${formatQuantity(stock)} ${
-      escapeHTML(medication.stock_unit || "unidades")
-    }`;
+    return `
+      Estoque atual: ${formatQuantity(stock)}
+      ${escapeHTML(medication.stock_unit || "unidades")}
+    `;
   }
 
   const days = Math.floor(stock / dailyUse);
 
-  if (days <= Number(medication.stock_alert_days || 3)) {
+  if (
+    days <= Number(medication.stock_alert_days || 3)
+  ) {
     return `
       <span class="stock-warning">
         Estoque para aproximadamente ${days} dia(s)
@@ -1666,6 +1925,7 @@ function stockMessage(medication) {
 
 function renderMedications() {
   const container = $("medicationList");
+
   if (!container) return;
 
   if (!medications.length) {
@@ -1676,6 +1936,7 @@ function renderMedications() {
         Use o botão “Adicionar novo medicamento” para começar.
       </div>
     `;
+
     return;
   }
 
@@ -1703,7 +1964,10 @@ function renderMedications() {
         <div class="medication-item-top">
 
           <div>
-            <h3>${escapeHTML(medication.name)}</h3>
+
+            <h3>
+              ${escapeHTML(medication.name)}
+            </h3>
 
             <p class="medication-dose">
               ${escapeHTML(medication.dose)}
@@ -1711,6 +1975,7 @@ function renderMedications() {
 
             <p class="medication-stock-display">
               📦 Disponível:
+
               <strong>
                 ${escapeHTML(
                   formatQuantity(medication.stock_quantity)
@@ -1718,6 +1983,7 @@ function renderMedications() {
                 ${escapeHTML(stockUnit)}
               </strong>
             </p>
+
           </div>
 
           <span class="small-text">
@@ -1735,6 +2001,7 @@ function renderMedications() {
 
           <div>
             Estoque:
+
             <strong>
               ${escapeHTML(
                 formatQuantity(medication.stock_quantity)
@@ -1743,7 +2010,9 @@ function renderMedications() {
             </strong>
           </div>
 
-          <div>${stockMessage(medication)}</div>
+          <div>
+            ${stockMessage(medication)}
+          </div>
 
           ${
             medication.instructions
@@ -1861,13 +2130,15 @@ function configureEvents() {
     handlePasswordUpdate
   );
 
-  $("showRegisterButton")?.addEventListener("click", () => {
-    showAuthPanel("registerPanel");
-  });
+  $("showRegisterButton")?.addEventListener(
+    "click",
+    () => showAuthPanel("registerPanel")
+  );
 
-  $("showRecoveryButton")?.addEventListener("click", () => {
-    showAuthPanel("recoveryPanel");
-  });
+  $("showRecoveryButton")?.addEventListener(
+    "click",
+    () => showAuthPanel("recoveryPanel")
+  );
 
   $("backToLoginFromRegister")?.addEventListener(
     "click",
@@ -1879,7 +2150,10 @@ function configureEvents() {
     () => showAuthPanel("loginPanel")
   );
 
-  $("logoutButton")?.addEventListener("click", logout);
+  $("logoutButton")?.addEventListener(
+    "click",
+    logout
+  );
 
   $("newMedicationButton")?.addEventListener(
     "click",
@@ -1915,6 +2189,7 @@ function configureEvents() {
     "click",
     event => {
       const button = event.target.closest("[data-action]");
+
       if (!button) return;
 
       if (button.dataset.action === "today-taken") {
@@ -1937,18 +2212,27 @@ function configureEvents() {
     "click",
     event => {
       const button = event.target.closest("[data-action]");
+
       if (!button) return;
 
       const { action, id } = button.dataset;
 
-      if (action === "edit") editMedication(id);
-      if (action === "restock") openRestockForm(id);
+      if (action === "edit") {
+        editMedication(id);
+      }
+
+      if (action === "restock") {
+        openRestockForm(id);
+      }
+
       if (action === "pause") {
         updateMedicationStatus(id, "paused");
       }
+
       if (action === "activate") {
         updateMedicationStatus(id, "active");
       }
+
       if (action === "complete") {
         updateMedicationStatus(id, "completed");
       }
@@ -1970,13 +2254,11 @@ function startDoseClock() {
 
     const today = todayLocalDate();
 
-    // Atualiza os registros quando virar o dia.
     if (lastLoadedLocalDate !== today) {
       loadMedications();
       return;
     }
 
-    // Atualiza os alertas de atraso a cada 30 segundos.
     renderTodayMedications();
 
   }, 30000);
@@ -2007,7 +2289,14 @@ function showSignedOutScreen() {
   currentUser = null;
   medications = [];
   schedulesByMedication = {};
+
   applicationLoading = false;
+  applicationPromise = null;
+  applicationUserId = null;
+
+  restockMedicationId = null;
+  editingMedicationId = null;
+
   lastLoadedLocalDate = null;
 
   $("appSection")?.classList.add("hidden");
@@ -2060,7 +2349,6 @@ async function restoreSavedSession() {
 async function initializeApp() {
   configureEvents();
 
-  // Inicia a verificação automática dos horários.
   startDoseClock();
 
   if (isRecoveryUrl()) {
@@ -2070,8 +2358,10 @@ async function initializeApp() {
 
   /*
     O listener é registrado antes da consulta de sessão.
-    Isso evita perder eventos de autenticação.
+    A chamada é adiada para evitar operações assíncronas
+    diretamente dentro do callback de autenticação.
   */
+
   supabaseClient.auth.onAuthStateChange(
     (event, session) => {
 
