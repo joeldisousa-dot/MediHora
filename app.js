@@ -236,7 +236,87 @@ function showMessage(message, isError = false) {
     toast.classList.remove("show");
   }, 3500);
 }
+/* ============================================================
+   ONESIGNAL — NOTIFICAÇÕES DO MEDIHORA
+   ============================================================ */
 
+function runOneSignal(callback) {
+  return new Promise((resolve, reject) => {
+    window.OneSignalDeferred = window.OneSignalDeferred || [];
+
+    window.OneSignalDeferred.push(async OneSignal => {
+      try {
+        const result = await callback(OneSignal);
+        resolve(result);
+      } catch (error) {
+        reject(error);
+      }
+    });
+  });
+}
+
+async function connectOneSignalUser(userId) {
+  if (!userId) return;
+
+  try {
+    await runOneSignal(async OneSignal => {
+      await OneSignal.login(userId);
+    });
+
+    console.log("Conta vinculada ao OneSignal.");
+  } catch (error) {
+    console.error("Erro ao vincular OneSignal:", error);
+  }
+}
+
+async function enableMedicationNotifications() {
+  if (!currentUser) {
+    showMessage("Entre na sua conta primeiro.", true);
+    return;
+  }
+
+  const button = $("enableNotificationsButton");
+
+  if (button) {
+    button.disabled = true;
+    button.textContent = "Ativando...";
+  }
+
+  try {
+    const permission = await runOneSignal(async OneSignal => {
+      await OneSignal.login(currentUser.id);
+
+      return await OneSignal.Notifications.requestPermission();
+    });
+
+    if (permission) {
+      showMessage("Notificações ativadas neste dispositivo!");
+
+      if (button) {
+        button.textContent = "🔔 Lembretes ativados";
+      }
+    } else {
+      showMessage(
+        "Permissão não concedida. Verifique as configurações de notificações do navegador.",
+        true
+      );
+    }
+
+  } catch (error) {
+    console.error("Erro ao ativar notificações:", error);
+
+    showMessage(
+      "Não foi possível ativar as notificações.",
+      true
+    );
+
+  } finally {
+    if (button && button.textContent === "Ativando...") {
+      button.disabled = false;
+      button.textContent = "🔔 Ativar lembretes no celular";
+    }
+  }
+}
 /* ============================================================
    AUTENTICAÇÃO
    ============================================================ */
