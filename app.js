@@ -650,7 +650,7 @@ async function showApplication(user) {
   if (!user || recoveryMode) return;
 
   currentUser = user;
-
+connectOneSignalUser(user.id);
   // A área pessoal aparece imediatamente.
   $("authSection")?.classList.add("hidden");
   $("appSection")?.classList.remove("hidden");
@@ -2319,7 +2319,10 @@ function configureEvents() {
     }
   );
 }
-
+$("enableNotificationsButton")?.addEventListener(
+  "click",
+  enableMedicationNotifications
+);
 /* ============================================================
    RELÓGIO INTELIGENTE DAS DOSES
    ============================================================ */
