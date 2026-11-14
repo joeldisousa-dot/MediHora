@@ -1,7 +1,586 @@
 
-/* ==========================================
-   MEDIHORA - RESUMO DIÁRIO
-   ========================================== */
+:root {
+  --green: #19865b;
+  --green-dark: #126b47;
+  --green-light: #e9f7ef;
+  --background: #f5f8f6;
+  --text: #24352d;
+  --muted: #718078;
+  --border: #e3eae6;
+  --white: #ffffff;
+  --red: #c62828;
+  --orange: #c45b13;
+  --shadow: 0 5px 22px rgba(30, 60, 45, .055);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--background);
+  color: var(--text);
+  font-family: "Nunito", sans-serif;
+  font-size: 15px;
+}
+
+button, input, select, textarea {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+.hidden {
+  display: none !important;
+}
+
+.topbar {
+  height: 68px;
+  padding: 0 max(22px, calc((100% - 1100px) / 2));
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #fff;
+  border-bottom: 1px solid var(--border);
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  color: var(--green-dark);
+  font-size: 21px;
+  font-weight: 900;
+}
+
+.brand-icon {
+  width: 38px;
+  height: 38px;
+  display: grid;
+  place-items: center;
+  border-radius: 12px;
+  background: var(--green-light);
+  font-size: 21px;
+}
+
+.page {
+  width: min(100% - 32px, 1050px);
+  margin: 30px auto 60px;
+}
+
+.auth-card,
+.welcome,
+.today-section,
+.panel {
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  box-shadow: var(--shadow);
+}
+
+.auth-card {
+  max-width: 470px;
+  margin: 45px auto;
+  padding: 34px;
+}
+
+.auth-intro {
+  text-align: center;
+  margin-bottom: 28px;
+}
+
+.large-icon {
+  font-size: 43px;
+  margin-bottom: 12px;
+}
+
+.auth-intro h1 {
+  font-size: 25px;
+  line-height: 1.25;
+  margin: 0 0 9px;
+}
+
+.auth-intro p,
+.muted {
+  color: var(--muted);
+}
+
+.auth-card h2 {
+  font-size: 20px;
+  margin: 0 0 20px;
+}
+
+label {
+  display: block;
+  font-weight: 800;
+  margin: 14px 0 6px;
+  font-size: 13px;
+}
+
+input,
+select,
+textarea {
+  width: 100%;
+  min-height: 44px;
+  border: 1px solid #dce5df;
+  border-radius: 10px;
+  padding: 10px 12px;
+  background: #fff;
+  color: var(--text);
+  outline: none;
+  transition: border .2s, box-shadow .2s;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  border-color: var(--green);
+  box-shadow: 0 0 0 3px rgba(25, 134, 91, .10);
+}
+
+textarea {
+  resize: vertical;
+}
+
+.button {
+  border: 0;
+  min-height: 42px;
+  border-radius: 10px;
+  padding: 10px 17px;
+  font-weight: 800;
+  transition: transform .15s, background .15s, box-shadow .15s;
+}
+
+.button:hover {
+  transform: translateY(-1px);
+}
+
+.button:disabled {
+  opacity: .55;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.button-primary {
+  color: #fff;
+  background: var(--green);
+  box-shadow: 0 4px 10px rgba(25, 134, 91, .14);
+}
+
+.button-primary:hover {
+  background: var(--green-dark);
+}
+
+.button-secondary {
+  color: var(--green-dark);
+  background: var(--green-light);
+}
+
+.button-light {
+  color: #52645a;
+  background: #edf2ef;
+}
+
+.full {
+  width: 100%;
+  margin-top: 18px;
+}
+
+.text-button {
+  display: block;
+  margin: 13px auto 0;
+  border: 0;
+  background: transparent;
+  color: var(--green-dark);
+  font-weight: 800;
+  padding: 7px;
+}
+
+.welcome {
+  padding: 24px 28px;
+  margin-bottom: 22px;
+}
+
+.welcome h1 {
+  margin: 4px 0;
+  font-size: 27px;
+}
+
+.eyebrow {
+  margin: 0;
+  color: var(--green);
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 1.1px;
+}
+
+.today-section,
+.panel {
+  padding: 25px;
+  margin-bottom: 22px;
+}
+
+.section-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 15px;
+  margin-bottom: 20px;
+}
+
+.section-heading h2 {
+  margin: 4px 0;
+  font-size: 22px;
+}
+
+.small-text {
+  font-size: 13px;
+}
+
+.today-icon {
+  font-size: 30px;
+  width: 48px;
+  height: 48px;
+  display: grid;
+  place-items: center;
+  border-radius: 15px;
+  background: #fff6df;
+}
+
+.today-medication-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.today-medication-card,
+.medication-item {
+  padding: 19px;
+  border: 1px solid var(--border);
+  border-radius: 15px;
+  background: #fff;
+}
+
+.today-medication-card h3,
+.medication-item h3 {
+  font-size: 18px;
+  margin: 0 0 3px;
+}
+
+.medication-dose {
+  color: var(--muted);
+  margin: 3px 0 12px;
+}
+
+.medication-stock-display {
+  color: #52645a;
+  font-size: 13px;
+  background: #f2f8f4;
+  padding: 9px 11px;
+  border-radius: 9px;
+  margin: 12px 0;
+}
+
+.medication-stock-display strong {
+  color: var(--green-dark);
+}
+
+.today-dose {
+  padding: 15px;
+  margin-top: 12px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: #fafcfb;
+}
+
+.today-dose-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.today-dose-time {
+  font-size: 15px;
+  font-weight: 900;
+}
+
+.today-dose-state {
+  color: #65756d;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.today-dose p {
+  font-size: 13px;
+  color: #64736b;
+}
+
+.today-dose-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 9px;
+  margin-top: 12px;
+}
+
+.button-taken,
+.button-not-taken {
+  flex: 1;
+  min-width: 130px;
+  min-height: 40px;
+  padding: 9px 12px;
+  border-radius: 9px;
+  font-weight: 900;
+  border: 1px solid transparent;
+}
+
+.button-taken {
+  color: #147747;
+  background: #e8f6ed;
+  border-color: #ccebd8;
+}
+
+.button-not-taken {
+  color: #b52d2d;
+  background: #fff0f0;
+  border-color: #f3d2d2;
+}
+
+.button-taken.selected {
+  background: #16834a;
+  color: white;
+}
+
+.button-not-taken.selected {
+  background: #c62828;
+  color: white;
+}
+
+.button-taken:disabled,
+.button-not-taken:disabled {
+  opacity: .7;
+  cursor: default;
+}
+
+.dose-stock-info {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding-top: 12px;
+  margin-top: 12px;
+  border-top: 1px solid var(--border);
+  color: #63736a;
+  font-size: 12px;
+}
+
+.dose-stock-info strong {
+  color: var(--green-dark);
+}
+
+.today-empty,
+.empty-state {
+  text-align: center;
+  padding: 30px 18px;
+  color: var(--muted);
+  background: #f8faf9;
+  border: 1px dashed #dce6df;
+  border-radius: 13px;
+}
+
+.today-empty strong {
+  display: block;
+  margin-top: 8px;
+  color: var(--text);
+}
+
+.add-medication-button {
+  margin-top: 20px;
+}
+
+.btn-medicamentos-cadastrados {
+  margin: 0 0 22px;
+}
+
+.count-badge {
+  display: grid;
+  place-items: center;
+  min-width: 35px;
+  height: 35px;
+  border-radius: 50%;
+  background: var(--green-light);
+  color: var(--green-dark);
+  font-weight: 900;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 5px 16px;
+}
+
+.field-full {
+  grid-column: 1 / -1;
+}
+
+.field-help {
+  display: block;
+  margin-top: 5px;
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.schedule-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 15px;
+  margin: 25px 0 12px;
+}
+
+.schedule-header h3 {
+  margin: 0 0 3px;
+}
+
+.schedule-header p {
+  margin: 0;
+}
+
+.schedule-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr auto;
+  align-items: end;
+  gap: 12px;
+  padding: 12px;
+  background: #f7faf8;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  margin-bottom: 10px;
+}
+
+.remove-schedule {
+  min-height: 43px;
+  padding: 8px 12px;
+  border: 0;
+  border-radius: 9px;
+  background: #fff0f0;
+  color: #b52d2d;
+  font-weight: 800;
+}
+
+.form-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 22px;
+}
+
+.medication-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 13px;
+}
+
+.medication-item-top {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.medication-meta {
+  display: grid;
+  gap: 8px;
+  color: #65736b;
+  font-size: 13px;
+  margin-top: 12px;
+}
+
+.item-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin-top: 16px;
+}
+
+.item-actions button {
+  padding: 8px 11px;
+  border: 0;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.edit-button,
+.restock-button {
+  background: #eaf5ee;
+  color: var(--green-dark);
+}
+
+.pause-button {
+  background: #fff5df;
+  color: #96610b;
+}
+
+.complete-button {
+  background: #edf1f3;
+  color: #52616a;
+}
+
+.stock-empty {
+  color: var(--red);
+  font-weight: 900;
+}
+
+.stock-warning {
+  color: var(--orange);
+  font-weight: 900;
+}
+
+.restock-panel {
+  border-left: 4px solid var(--green);
+}
+
+.disclaimer {
+  max-width: 800px;
+  margin: 25px auto;
+  text-align: center;
+  color: #829087;
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.toast {
+  position: fixed;
+  z-index: 1000;
+  left: 50%;
+  bottom: 24px;
+  transform: translate(-50%, 20px);
+  opacity: 0;
+  pointer-events: none;
+  background: #263b32;
+  color: white;
+  border-radius: 11px;
+  padding: 13px 19px;
+  box-shadow: 0 8px 25px rgba(0,0,0,.15);
+  transition: .25s ease;
+  max-width: calc(100% - 30px);
+  text-align: center;
+}
+
+.toast.show {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+
+.toast.error {
+  background: #b52d2d;
+}
+
+/* RESUMO DIÁRIO */
 
 .dose-daily-summary {
   background: #ffffff;
@@ -9,7 +588,7 @@
   border-radius: 16px;
   padding: 18px;
   margin-bottom: 22px;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.035);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, .035);
 }
 
 .dose-summary-title {
@@ -68,15 +647,13 @@
   color: #526779;
 }
 
-/* ==========================================
-   DOSE COM HORÁRIO ULTRAPASSADO
-   ========================================== */
+/* DOSE ATRASADA */
 
 .today-dose.status-overdue {
   background: #fff8f7;
   border: 2px solid #dc5555;
   border-left: 6px solid #dc3333;
-  box-shadow: 0 5px 16px rgba(220, 51, 51, 0.09);
+  box-shadow: 0 5px 16px rgba(220, 51, 51, .09);
 }
 
 .today-dose.status-overdue .today-dose-state {
@@ -124,9 +701,7 @@
   opacity: .85;
 }
 
-/* ==========================================
-   DOSE CONFIRMADA COMO NÃO TOMADA
-   ========================================== */
+/* DOSE NÃO TOMADA */
 
 .today-dose.status-not_taken {
   background: #fff6f6;
@@ -155,9 +730,7 @@
   font-weight: 900;
 }
 
-/* ==========================================
-   DOSE CONFIRMADA COMO TOMADA
-   ========================================== */
+/* DOSE TOMADA */
 
 .today-dose.status-taken {
   border-left: 5px solid #20a464;
@@ -168,25 +741,66 @@
   font-weight: 900;
 }
 
-/* ==========================================
-   ANIMAÇÃO DISCRETA DO ALERTA
-   ========================================== */
-
 @keyframes doseAlert {
   0%, 100% {
     box-shadow: 0 0 0 rgba(220, 51, 51, 0);
   }
-
   50% {
-    box-shadow: 0 0 12px rgba(220, 51, 51, 0.12);
+    box-shadow: 0 0 12px rgba(220, 51, 51, .12);
   }
 }
 
-/* ==========================================
-   RESPONSIVIDADE
-   ========================================== */
+@media (max-width: 700px) {
+  .page {
+    width: min(100% - 20px, 600px);
+    margin-top: 16px;
+  }
 
-@media (max-width: 650px) {
+  .topbar {
+    height: 60px;
+    padding: 0 15px;
+  }
+
+  .auth-card {
+    margin: 20px auto;
+    padding: 23px 18px;
+  }
+
+  .today-section,
+  .panel,
+  .welcome {
+    padding: 18px;
+    border-radius: 15px;
+  }
+
+  .welcome h1 {
+    font-size: 23px;
+  }
+
+  .section-heading h2 {
+    font-size: 19px;
+  }
+
+  .medication-list {
+    grid-template-columns: 1fr;
+  }
+
+  .schedule-row {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .remove-schedule {
+    grid-column: 1 / -1;
+  }
+
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .field-full {
+    grid-column: auto;
+  }
+
   .dose-summary-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -201,5 +815,23 @@
 
   .dose-overdue-alert {
     padding: 11px;
+  }
+
+  .today-dose-actions {
+    flex-direction: column;
+  }
+
+  .button-taken,
+  .button-not-taken {
+    width: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: .01ms !important;
+    transition-duration: .01ms !important;
   }
 }
