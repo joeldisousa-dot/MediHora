@@ -1137,3 +1137,239 @@ textarea {
     scroll-behavior: auto !important;
   }
 }
+
+/* =========================================================
+   MEDIHORA — MELHORIAS VISUAIS DAS DOSES
+   ========================================================= */
+
+/* Cartões de doses */
+.dose-card,
+.medication-dose-card,
+.today-dose-card {
+    border: 1px solid #e2eae5;
+    border-radius: 16px;
+    padding: 18px;
+    margin-bottom: 14px;
+    background: #ffffff;
+    transition: border-color .2s ease, box-shadow .2s ease;
+}
+
+/* Área dos botões */
+.dose-actions,
+.dose-buttons,
+.dose-card-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 16px;
+}
+
+/* Botão tomar dose */
+.btn-taken,
+.btn-take,
+.btn-mark-taken,
+button[data-action="taken"] {
+    background: #168653 !important;
+    color: #ffffff !important;
+    border: 1px solid #106b42 !important;
+    border-radius: 11px;
+    padding: 12px 20px;
+    min-height: 46px;
+    font-weight: 800;
+    cursor: pointer;
+    box-shadow: 0 3px 8px rgba(22, 134, 83, .20);
+    transition: .2s ease;
+}
+
+.btn-taken:hover,
+.btn-take:hover,
+.btn-mark-taken:hover,
+button[data-action="taken"]:hover {
+    background: #106b42 !important;
+    transform: translateY(-2px);
+}
+
+/* Botão não tomei */
+.btn-not-taken,
+.btn-not-take,
+.btn-mark-not-taken,
+button[data-action="not-taken"] {
+    background: #fff0f0 !important;
+    color: #c62828 !important;
+    border: 1px solid #e7aaaa !important;
+    border-radius: 11px;
+    padding: 12px 20px;
+    min-height: 46px;
+    font-weight: 800;
+    cursor: pointer;
+    transition: .2s ease;
+}
+
+.btn-not-taken:hover,
+.btn-not-take:hover,
+.btn-mark-not-taken:hover,
+button[data-action="not-taken"]:hover {
+    background: #ffe0e0 !important;
+    transform: translateY(-2px);
+}
+
+/* Dose atrasada */
+.dose-overdue,
+.status-overdue,
+[data-status="overdue"] {
+    border: 2px solid #e87524 !important;
+    background: #fff8f1 !important;
+    box-shadow: 0 4px 13px rgba(200, 91, 19, .12);
+}
+
+.dose-overdue .dose-status,
+.status-overdue .dose-status {
+    color: #c45b13;
+    font-weight: 900;
+}
+
+/* Identificação de atraso */
+.dose-overdue .status-label,
+.status-overdue .status-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    color: #b84d0c;
+    background: #ffeadb;
+    border-radius: 20px;
+    padding: 5px 10px;
+    font-size: 12px;
+    font-weight: 900;
+}
+
+/* Dose tomada */
+.dose-taken,
+.status-taken,
+[data-status="taken"] {
+    border-color: #8ac9a5 !important;
+    background: #f0faf4 !important;
+}
+
+/* Dose não tomada */
+.dose-not-taken,
+.status-not-taken,
+[data-status="not_taken"] {
+    border-color: #e8aaaa !important;
+    background: #fff5f5 !important;
+}
+
+/* Resumo diário */
+.dose-daily-summary {
+    background: #ffffff;
+    border: 1px solid #e5e9e7;
+    border-radius: 16px;
+    padding: 18px;
+    margin-bottom: 22px;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, .035);
+}
+
+.dose-summary-title {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    font-size: 16px;
+    margin-bottom: 15px;
+    color: #263b32;
+    font-weight: 800;
+}
+
+.dose-summary-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 10px;
+}
+
+.dose-summary-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    padding: 13px 6px;
+    border-radius: 12px;
+    text-align: center;
+}
+
+.dose-summary-item strong {
+    font-size: 25px;
+    font-weight: 900;
+}
+
+.dose-summary-item span {
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.summary-taken {
+    background: #e9f7ef;
+    color: #16834a;
+}
+
+.summary-not-taken {
+    background: #fff0f0;
+    color: #c62828;
+}
+
+.summary-overdue {
+    background: #fff1e6;
+    color: #c45b13;
+}
+
+/* Animação discreta para doses atrasadas */
+@keyframes doseOverduePulse {
+    0%, 100% {
+        box-shadow: 0 4px 13px rgba(200, 91, 19, .10);
+    }
+    50% {
+        box-shadow: 0 4px 18px rgba(200, 91, 19, .22);
+    }
+}
+
+.dose-overdue,
+.status-overdue {
+    animation: doseOverduePulse 2.5s ease-in-out infinite;
+}
+
+/* Celulares */
+@media (max-width: 600px) {
+    .dose-summary-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .dose-actions,
+    .dose-buttons,
+    .dose-card-actions {
+        flex-direction: column;
+    }
+
+    .dose-actions button,
+    .dose-buttons button,
+    .dose-card-actions button {
+        width: 100%;
+        min-height: 48px;
+    }
+
+    .dose-card,
+    .medication-dose-card,
+    .today-dose-card {
+        padding: 15px;
+    }
+}
+
+/* Acessibilidade */
+@media (prefers-reduced-motion: reduce) {
+    .dose-overdue,
+    .status-overdue {
+        animation: none;
+    }
+
+    .btn-taken,
+    .btn-not-taken {
+        transition: none;
+    }
+}
