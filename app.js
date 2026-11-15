@@ -2037,42 +2037,55 @@ function getTodayDoseItems() {
    RESUMO DAS DOSES DO DIA
    ============================================================ */
 
+
 function updateTodaySummary(items) {
-  const taken = items.filter(item =>
-    item.schedule.doseStatus === "taken"
-  ).length;
+  const counts = {
+    taken: 0,
+    not_taken: 0,
+    pending: 0,
+    overdue: 0
+  };
 
-  const notTaken = items.filter(item =>
-    item.schedule.doseStatus === "not_taken"
-  ).length;
+  for (const item of items) {
+    const status = getDoseDisplayStatus(item.schedule);
 
-  const pending = items.length - taken - notTaken;
+    if (Object.prototype.hasOwnProperty.call(counts, status)) {
+      counts[status]++;
+    }
+  }
 
   const summary = $("todayMedicationSummary");
 
-  if (summary) {
-    summary.innerHTML = `
-      <div class="summary-item">
-        <strong>${taken}</strong>
-        <span>Tomadas</span>
-      </div>
+  if (!summary) return;
 
-      <div class="summary-item">
-        <strong>${pending}</strong>
-        <span>Pendentes</span>
-      </div>
+  summary.innerHTML = `
+    <div class="summary-item summary-taken">
+      <strong>${counts.taken}</strong>
+      <span>Tomadas</span>
+    </div>
 
-      <div class="summary-item">
-        <strong>${notTaken}</strong>
-        <span>Não tomadas</span>
-      </div>
-    `;
-  }
+    <div class="summary-item summary-pending">
+      <strong>${counts.pending}</strong>
+      <span>Pendentes</span>
+    </div>
+
+    <div class="summary-item summary-overdue">
+      <strong>${counts.overdue}</strong>
+      <span>Atrasadas</span>
+    </div>
+
+    <div class="summary-item summary-not-taken">
+      <strong>${counts.not_taken}</strong>
+      <span>Não tomadas</span>
+    </div>
+  `;
 }
+
 
 /* ============================================================
    RENDERIZAR DOSES DO DIA
    ============================================================ */
+
 
 async function renderTodayMedications() {
   const container = $("todayMedicationList");
@@ -2084,8 +2097,10 @@ async function renderTodayMedications() {
     return;
   }
 
+  // Recupera todas as doses programadas para hoje.
   const items = getTodayDoseItems();
 
+  // O resumo considera todas as doses, inclusive as registradas.
   updateTodaySummary(items);
 
   if (!items.length) {
@@ -2103,29 +2118,46 @@ async function renderTodayMedications() {
     return;
   }
 
-  container.innerHTML = items.map(item => {
+  /*
+    Remove da lista visual as doses que já foram registradas.
+    Os registros continuam preservados no Supabase.
+  */
+  const pendingItems = items.filter(item => {
+    const status = getDoseDisplayStatus(item.schedule);
+
+    return status !== "taken" && status !== "not_taken";
+  });
+
+  if (!pendingItems.length) {
+    container.innerHTML = `
+      <div class="empty-state doses-completed">
+        <div class="empty-state-icon">🎉</div>
+        <h3>Todas as doses foram registradas!</h3>
+        <p>
+          Você já registrou todas as doses programadas
+          para hoje. Seu acompanhamento está atualizado.
+        </p>
+      </div>
+    `;
+
+    return;
+  }
+
+  container.innerHTML = pendingItems.map(item => {
     const medication = item.medication;
     const schedule = item.schedule;
 
     const status = getDoseDisplayStatus(schedule);
 
     const statusText = {
-      taken: "Dose tomada",
-      not_taken: "Não tomada",
       overdue: "Dose atrasada",
       pending: "Aguardando horário"
     }[status];
 
     const statusClass = {
-      taken: "taken",
-      not_taken: "not-taken",
       overdue: "overdue",
       pending: "pending"
     }[status];
-
-    const alreadyAnswered =
-      status === "taken" ||
-      status === "not_taken";
 
     return `
       <article
@@ -2176,37 +2208,32 @@ async function renderTodayMedications() {
             : ""
         }
 
-        ${
-          alreadyAnswered
-            ? ""
-            : `
-              <div class="dose-actions">
-                <button
-                  type="button"
-                  class="today-taken"
-                  data-action="take-dose"
-                  data-schedule-id="${escapeHTML(schedule.id)}"
-                  data-time="${escapeHTML(item.time)}"
-                >
-                  ✓ Tomei
-                </button>
+        <div class="dose-actions">
+          <button
+            type="button"
+            class="today-taken"
+            data-action="take-dose"
+            data-schedule-id="${escapeHTML(schedule.id)}"
+            data-time="${escapeHTML(item.time)}"
+          >
+            ✓ Tomei
+          </button>
 
-                <button
-                  type="button"
-                  class="today-not-taken"
-                  data-action="skip-dose"
-                  data-schedule-id="${escapeHTML(schedule.id)}"
-                  data-time="${escapeHTML(item.time)}"
-                >
-                  ✕ Não tomei
-                </button>
-              </div>
-            `
-        }
+          <button
+            type="button"
+            class="today-not-taken"
+            data-action="skip-dose"
+            data-schedule-id="${escapeHTML(schedule.id)}"
+            data-time="${escapeHTML(item.time)}"
+          >
+            ✕ Não tomei
+          </button>
+        </div>
       </article>
     `;
   }).join("");
 }
+
 
 /* ============================================================
    LOCALIZAR HORÁRIO CADASTRADO
