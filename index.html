@@ -23,10 +23,17 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
   <!-- ONESIGNAL WEB SDK V16 -->
-  <script>
+<!-- SDK OneSignal v16 -->
+<script
+  src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js"
+  defer>
+</script>
+
+<!-- Inicialização do MediHora -->
+<script>
   window.OneSignalDeferred = window.OneSignalDeferred || [];
 
-  OneSignalDeferred.push(async function(OneSignal) {
+  window.OneSignalDeferred.push(async function(OneSignal) {
     try {
       await OneSignal.init({
         appId: "4cc3291c-bf66-4c3b-b9b9-5703e75bf006",
@@ -39,7 +46,7 @@
       console.log("MediHora: OneSignal inicializado com sucesso.");
 
     } catch (error) {
-      console.error("MediHora: erro ao inicializar OneSignal:", error);
+      console.error("Erro ao inicializar OneSignal:", error);
     }
   });
 </script>
