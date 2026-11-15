@@ -15,6 +15,7 @@
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
   <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 
   <link rel="stylesheet" href="./style.css">
@@ -22,64 +23,44 @@
   <!-- SUPABASE -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-<!-- OneSignal SDK v16 -->
-<script
-  src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js"
-  defer>
-</script>
+  <!-- ONESIGNAL WEB SDK V16: UMA ÚNICA INCLUSÃO -->
+  <script
+    src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js"
+    defer>
+  </script>
 
-<script>
-  window.OneSignalDeferred = window.OneSignalDeferred || [];
+  <!-- INICIALIZAÇÃO ÚNICA DO ONESIGNAL -->
+  <script>
+    window.OneSignalDeferred = window.OneSignalDeferred || [];
 
-  window.OneSignalDeferred.push(async function(OneSignal) {
-    try {
-      await OneSignal.init({
-        appId: "4cc3291c-bf66-4c3b-b9b9-5703e75bf006",
-        serviceWorkerPath: "/MediHora/OneSignalSDKWorker.js",
-        serviceWorkerParam: {
-          scope: "/MediHora/"
-        }
-      });
+    window.OneSignalDeferred.push(async function(OneSignal) {
+      try {
+        await OneSignal.init({
+          appId: "4cc3291c-bf66-4c3b-b9b9-5703e75bf006",
 
-      console.log("MediHora: OneSignal inicializado com sucesso.");
+          serviceWorkerPath: "/MediHora/OneSignalSDKWorker.js",
 
-    } catch (error) {
-      console.error("MediHora: erro ao inicializar OneSignal:", error);
-    }
-  });
-</script>
+          serviceWorkerParam: {
+            scope: "/MediHora/"
+          }
+        });
 
-  <!-- ONESIGNAL WEB SDK V16 -->
-<!-- SDK OneSignal v16 -->
-<script
-  src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js"
-  defer>
-</script>
+        console.log(
+          "MediHora: OneSignal inicializado com sucesso."
+        );
 
-<!-- Inicialização do MediHora -->
-<script>
-  window.OneSignalDeferred = window.OneSignalDeferred || [];
-
-  window.OneSignalDeferred.push(async function(OneSignal) {
-    try {
-      await OneSignal.init({
-        appId: "4cc3291c-bf66-4c3b-b9b9-5703e75bf006",
-        serviceWorkerPath: "/MediHora/OneSignalSDKWorker.js",
-        serviceWorkerParam: {
-          scope: "/MediHora/"
-        }
-      });
-
-      console.log("MediHora: OneSignal inicializado com sucesso.");
-
-    } catch (error) {
-      console.error("Erro ao inicializar OneSignal:", error);
-    }
-  });
-</script>
+      } catch (error) {
+        console.error(
+          "MediHora: erro ao inicializar OneSignal:",
+          error
+        );
+      }
+    });
+  </script>
 
   <!-- APLICATIVO -->
   <script src="./app.js" defer></script>
+
 </head>
 
 <body>
@@ -634,4 +615,3 @@
 
 </body>
 </html>
-```
