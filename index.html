@@ -1,4 +1,4 @@
-
+ 
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -22,39 +22,11 @@
 
   <!-- SUPABASE -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<!-- ONESIGNAL WEB SDK V16 -->
-<script
-  src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js"
-  defer>
-</script>
 
-<script>
-  window.OneSignalDeferred = window.OneSignalDeferred || [];
+  <!-- ONESIGNAL WEB SDK V16: INCLUSÃO ÚNICA -->
+  <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
 
-  window.OneSignalDeferred.push(async function(OneSignal) {
-    try {
-      await OneSignal.init({
-        appId: "4cc3291c-bf66-4c3b-b9b9-5703e75bf006",
-        serviceWorkerPath: "/MediHora/OneSignalSDKWorker.js",
-        serviceWorkerParam: {
-          scope: "/MediHora/"
-        }
-      });
-
-      console.log("MediHora: OneSignal inicializado com sucesso.");
-
-    } catch (error) {
-      console.error("MediHora: erro ao inicializar OneSignal:", error);
-    }
-  });
-</script>
-  <!-- ONESIGNAL WEB SDK V16: UMA ÚNICA INCLUSÃO -->
-  <script
-    src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js"
-    defer>
-  </script>
-
-  <!-- INICIALIZAÇÃO ÚNICA DO ONESIGNAL -->
+  <!-- ONESIGNAL: INICIALIZAÇÃO ÚNICA -->
   <script>
     window.OneSignalDeferred = window.OneSignalDeferred || [];
 
@@ -62,23 +34,16 @@
       try {
         await OneSignal.init({
           appId: "4cc3291c-bf66-4c3b-b9b9-5703e75bf006",
-
           serviceWorkerPath: "/MediHora/OneSignalSDKWorker.js",
-
           serviceWorkerParam: {
             scope: "/MediHora/"
           }
         });
 
-        console.log(
-          "MediHora: OneSignal inicializado com sucesso."
-        );
+        console.log("MediHora: OneSignal inicializado com sucesso.");
 
       } catch (error) {
-        console.error(
-          "MediHora: erro ao inicializar OneSignal:",
-          error
-        );
+        console.error("MediHora: erro ao inicializar OneSignal:", error);
       }
     });
   </script>
@@ -330,7 +295,7 @@
 
       </section>
 
-      <!-- BOTÃO DE MEDICAMENTOS CADASTRADOS -->
+      <!-- MEDICAMENTOS CADASTRADOS -->
       <button
         id="btnMedicamentosCadastrados"
         class="button button-primary full btn-medicamentos-cadastrados"
