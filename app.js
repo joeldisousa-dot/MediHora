@@ -3043,6 +3043,37 @@ function configureEvents() {
   );
 }
 
+  // ORIENTAÇÕES SOBRE O APLICATIVO
+  $("guideButton")?.addEventListener("click", () => {
+    const panel = $("appGuidePanel");
+    const button = $("guideButton");
+
+    if (!panel || !button) return;
+
+    panel.classList.toggle("hidden");
+
+    const aberto = !panel.classList.contains("hidden");
+
+    button.setAttribute("aria-expanded", String(aberto));
+
+    if (aberto) {
+      panel.scrollIntoView({
+        behavior: "smooth",
+        block: "start"
+      });
+    }
+  });
+
+  $("closeGuideButton")?.addEventListener("click", () => {
+    $("appGuidePanel")?.classList.add("hidden");
+    $("guideButton")?.setAttribute("aria-expanded", "false");
+
+    $("guideButton")?.scrollIntoView({
+      behavior: "smooth",
+      block: "center"
+    });
+  });
+
 /* ============================================================
    MONITORAMENTO DAS ALTERAÇÕES DE AUTENTICAÇÃO
    ============================================================ */
@@ -3167,31 +3198,4 @@ if (document.readyState === "loading") {
   initializeApp();
 }
 
-  // ORIENTAÇÕES SOBRE O APLICATIVO
-  $("guideButton").addEventListener("click", () => {
-    const panel = $("appGuidePanel");
-    const button = $("guideButton");
-
-    panel.classList.toggle("hidden");
-
-    const aberto = !panel.classList.contains("hidden");
-
-    button.setAttribute("aria-expanded", String(aberto));
-
-    if (aberto) {
-      panel.scrollIntoView({
-        behavior: "smooth",
-        block: "start"
-      });
-    }
-  });
-
-  $("closeGuideButton").addEventListener("click", () => {
-    $("appGuidePanel").classList.add("hidden");
-    $("guideButton").setAttribute("aria-expanded", "false");
-
-    $("guideButton").scrollIntoView({
-      behavior: "smooth",
-      block: "center"
-    });
-  });
+ 
