@@ -629,6 +629,7 @@ function showLoginScreen() {
    CADASTRO DE CONTA
    ============================================================ */
 
+
 async function handleRegister(event) {
   event.preventDefault();
 
@@ -637,11 +638,16 @@ async function handleRegister(event) {
   const password = $("registerPassword")?.value || "";
 
   if (!name || !email || !password) {
-    showMessage(
-      "Preencha todos os campos do cadastro.",
-      true
-    );
+    showMessage("Preencha todos os campos do cadastro.", true);
     return;
+  }
+
+  const form = $("registerForm");
+  const button = form?.querySelector('button[type="submit"]');
+
+  if (button) {
+    button.disabled = true;
+    button.textContent = "Criando conta...";
   }
 
   try {
@@ -659,16 +665,49 @@ async function handleRegister(event) {
 
     if (error) throw error;
 
-    if (data.session && data.user) {
-      await showApplication(data.user);
-      showMessage("Conta criada com sucesso!");
-
-    } else {
+    // Verifica se o Supabase retornou uma conta já existente.
+    if (
+      data.user &&
+      Array.isArray(data.user.identities) &&
+      data.user.identities.length === 0
+    ) {
       showMessage(
-        "Cadastro realizado! Confira seu e-mail para confirmar a conta."
+        "Este e-mail já possui cadastro. Tente entrar na sua conta.",
+        true
       );
 
       showAuthPanel("loginPanel");
+      return;
+    }
+
+    // Caso a confirmação de e-mail esteja desabilitada.
+    if (data.session && data.user) {
+      await showApplication(data.user);
+      showMessage("Conta criada com sucesso!");
+      return;
+    }
+
+    // Cadastro aguardando confirmação do e-mail.
+    const toast = $("toast");
+
+    showAuthPanel("loginPanel");
+
+    if (toast) {
+      toast.textContent =
+        `Cadastro realizado! 💊 Enviamos um e-mail de confirmação para ${email}. Acesse sua caixa de entrada e clique no link para ativar sua conta. Se não encontrar, verifique também a pasta de spam.`;
+
+      toast.classList.remove("error");
+      toast.classList.add("show");
+
+      clearTimeout(toastTimeout);
+
+      toastTimeout = setTimeout(() => {
+        toast.classList.remove("show");
+      }, 12000);
+    } else {
+      showMessage(
+        `Cadastro realizado! Confira o e-mail enviado para ${email}.`
+      );
     }
 
   } catch (error) {
@@ -678,8 +717,15 @@ async function handleRegister(event) {
       error.message || "Não foi possível criar a conta.",
       true
     );
+
+  } finally {
+    if (button) {
+      button.disabled = false;
+      button.textContent = "Criar conta";
+    }
   }
 }
+
 
 /* ============================================================
    LOGIN
