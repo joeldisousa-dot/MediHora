@@ -31,30 +31,29 @@
 
   <!-- ONESIGNAL: INICIALIZAÇÃO ÚNICA -->
   <script>
-    window.OneSignalDeferred = window.OneSignalDeferred || [];
+  window.OneSignalDeferred = window.OneSignalDeferred || [];
 
-    window.OneSignalDeferred.push(async function(OneSignal) {
-      try {
-        await OneSignal.init({
-          appId: "4cc3291c-bf66-4c3b-b9b9-5703e75bf006",
+  OneSignalDeferred.push(async function(OneSignal) {
+    try {
+      await OneSignal.init({
+        appId: "4cc3291c-bf66-4c3b-b9b9-5703e75bf006",
 
-          serviceWorkerPath: "MediHora/OneSignalSDKWorker.js",
+        serviceWorkerPath: "/MediHora/OneSignalSDKWorker.js",
 
-          serviceWorkerParam: {
-            scope: "/MediHora/"
-          }
-        });
+        serviceWorkerParam: {
+          scope: "/MediHora/"
+        },
 
-        console.log("MediHora: OneSignal inicializado com sucesso.");
+        serviceWorkerOverrideForTypical: true
+      });
 
-      } catch (error) {
-        console.error(
-          "MediHora: erro ao inicializar OneSignal:",
-          error
-        );
-      }
-    });
-  </script>
+      console.log("MediHora: OneSignal inicializado com sucesso.");
+
+    } catch (error) {
+      console.error("MediHora: erro ao inicializar OneSignal:", error);
+    }
+  });
+</script>
 
   <!-- APLICATIVO -->
   <script src="./app.js" defer></script>
