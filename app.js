@@ -3166,3 +3166,32 @@ if (document.readyState === "loading") {
 } else {
   initializeApp();
 }
+
+  // ORIENTAÇÕES SOBRE O APLICATIVO
+  $("guideButton").addEventListener("click", () => {
+    const panel = $("appGuidePanel");
+    const button = $("guideButton");
+
+    panel.classList.toggle("hidden");
+
+    const aberto = !panel.classList.contains("hidden");
+
+    button.setAttribute("aria-expanded", String(aberto));
+
+    if (aberto) {
+      panel.scrollIntoView({
+        behavior: "smooth",
+        block: "start"
+      });
+    }
+  });
+
+  $("closeGuideButton").addEventListener("click", () => {
+    $("appGuidePanel").classList.add("hidden");
+    $("guideButton").setAttribute("aria-expanded", "false");
+
+    $("guideButton").scrollIntoView({
+      behavior: "smooth",
+      block: "center"
+    });
+  });
