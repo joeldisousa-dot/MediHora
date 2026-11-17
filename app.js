@@ -2143,8 +2143,10 @@ async function renderTodayMedications() {
     return;
   }
 
+  // Recupera todas as doses programadas para hoje.
   const items = getTodayDoseItems();
 
+  // O resumo considera todas as doses, inclusive as registradas.
   updateTodaySummary(items);
 
   if (!items.length) {
@@ -2158,20 +2160,21 @@ async function renderTodayMedications() {
         </p>
       </div>
     `;
+
     return;
   }
 
   /*
-    Mantém visíveis as doses pendentes e tomadas.
-    As doses marcadas como "não tomada" continuam fora da lista,
-    como no comportamento anterior.
-    Doses tomadas permanecem visíveis para permitir desfazer.
+    Remove da lista visual as doses que já foram registradas.
+    Os registros continuam preservados no Supabase.
   */
-  const visibleItems = items.filter(item => {
-    return getDoseDisplayStatus(item.schedule) !== "not_taken";
+  const pendingItems = items.filter(item => {
+    const status = getDoseDisplayStatus(item.schedule);
+
+    return status !== "taken" && status !== "not_taken";
   });
 
-  if (!visibleItems.length) {
+  if (!pendingItems.length) {
     container.innerHTML = `
       <div class="empty-state doses-completed">
         <div class="empty-state-icon">🎉</div>
@@ -2182,73 +2185,25 @@ async function renderTodayMedications() {
         </p>
       </div>
     `;
+
     return;
   }
 
-  container.innerHTML = visibleItems.map(item => {
+  container.innerHTML = pendingItems.map(item => {
     const medication = item.medication;
     const schedule = item.schedule;
+
     const status = getDoseDisplayStatus(schedule);
 
     const statusText = {
-      taken: "Dose tomada",
       overdue: "Dose atrasada",
       pending: "Aguardando horário"
     }[status];
 
     const statusClass = {
-      taken: "taken",
       overdue: "overdue",
       pending: "pending"
     }[status];
-
-    const actionsHTML = status === "taken"
-      ? `
-        <div class="dose-actions">
-          <button
-            type="button"
-            class="today-undo-dose"
-            data-action="undo-dose"
-            data-schedule-id="${escapeHTML(schedule.id)}"
-            data-time="${escapeHTML(item.time)}"
-            style="
-              width:100%;
-              padding:12px 16px;
-              border:1px solid #d97706;
-              border-radius:10px;
-              background:#fff7ed;
-              color:#9a3412;
-              font-weight:700;
-              cursor:pointer;
-            "
-          >
-            ↩ Desfazer registro
-          </button>
-        </div>
-      `
-      : `
-        <div class="dose-actions">
-          <button
-            type="button"
-            class="today-taken"
-            data-action="take-dose"
-            data-schedule-id="${escapeHTML(schedule.id)}"
-            data-time="${escapeHTML(item.time)}"
-          >
-            ✓ Tomei
-          </button>
-
-          <button
-            type="button"
-            class="today-not-taken"
-            data-action="skip-dose"
-            data-schedule-id="${escapeHTML(schedule.id)}"
-            data-time="${escapeHTML(item.time)}"
-          >
-            ✕ Não tomei
-          </button>
-        </div>
-      `;
 
     return `
       <article
@@ -2264,7 +2219,9 @@ async function renderTodayMedications() {
 
             <h3>${escapeHTML(medication.name)}</h3>
 
-            <p>${escapeHTML(medication.dose || "")}</p>
+            <p>
+              ${escapeHTML(medication.dose || "")}
+            </p>
           </div>
 
           <span class="dose-status ${statusClass}">
@@ -2297,11 +2254,32 @@ async function renderTodayMedications() {
             : ""
         }
 
-        ${actionsHTML}
+        <div class="dose-actions">
+          <button
+            type="button"
+            class="today-taken"
+            data-action="take-dose"
+            data-schedule-id="${escapeHTML(schedule.id)}"
+            data-time="${escapeHTML(item.time)}"
+          >
+            ✓ Tomei
+          </button>
+
+          <button
+            type="button"
+            class="today-not-taken"
+            data-action="skip-dose"
+            data-schedule-id="${escapeHTML(schedule.id)}"
+            data-time="${escapeHTML(item.time)}"
+          >
+            ✕ Não tomei
+          </button>
+        </div>
       </article>
     `;
   }).join("");
 }
+
 
 /* ============================================================
    LOCALIZAR HORÁRIO CADASTRADO
@@ -2362,7 +2340,7 @@ function showDoseConfirmation(message = "Confirma o registro de que tomou o medi
           Confirmar registro
         </h3>
         <p style="margin: 0 0 24px; font-size: 15px; line-height: 1.5;">
-          ${escapeHTML(message)}
+          ${message}
         </p>
         <div style="display: flex; gap: 12px;">
           <button type="button" id="doseConfirmationNo"
@@ -2539,81 +2517,6 @@ async function markDoseNotTaken(scheduleId, time) {
 
     showMessage(
       error.message || "Não foi possível registrar a dose.",
-      true
-    );
-
-    buttons?.forEach(button => {
-      button.disabled = false;
-    });
-  }
-}
-
-
-/* ============================================================
-   DESFAZER REGISTRO DE DOSE TOMADA
-   ============================================================ */
-
-async function undoDoseTaken(scheduleId, time) {
-  if (!currentUser) {
-    showMessage("Entre na sua conta novamente.", true);
-    return;
-  }
-
-  const schedule = findSchedule(scheduleId);
-
-  if (!schedule) {
-    showMessage("Horário de medicamento não encontrado.", true);
-    return;
-  }
-
-  const confirmado = await showDoseConfirmation(
-    "Deseja desfazer o registro de que tomou este medicamento? O estoque será atualizado."
-  );
-
-  if (!confirmado) return;
-
-  const scheduledFor = localScheduleTimestamp(
-    todayLocalDate(),
-    time || schedule.scheduled_time
-  );
-
-  const card = document.querySelector(
-    `.today-medication-card[data-schedule-id="${CSS.escape(String(scheduleId))}"]`
-  );
-
-  const buttons = card?.querySelectorAll("button");
-  buttons?.forEach(button => {
-    button.disabled = true;
-  });
-
-  try {
-    const { data, error } = await supabaseClient.rpc(
-      "undo_dose_taken",
-      {
-        p_schedule_id: scheduleId,
-        p_scheduled_for: scheduledFor
-      }
-    );
-
-    if (error) throw error;
-
-    if (!data?.success) {
-      throw new Error("Não foi possível desfazer o registro da dose.");
-    }
-
-    await loadMedications();
-    await renderTodayMedications();
-    renderMedications();
-
-    showMessage(
-      "Registro desfeito. A quantidade foi devolvida ao estoque."
-    );
-
-  } catch (error) {
-    console.error("Erro ao desfazer registro da dose:", error);
-
-    showMessage(
-      error.message || "Não foi possível desfazer o registro.",
       true
     );
 
@@ -2976,10 +2879,6 @@ function handleTodayMedicationClick(event) {
 
   if (action === "skip-dose") {
     markDoseNotTaken(scheduleId, time);
-  }
-
-  if (action === "undo-dose") {
-    undoDoseTaken(scheduleId, time);
   }
 }
 
