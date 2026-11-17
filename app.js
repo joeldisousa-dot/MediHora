@@ -2303,6 +2303,11 @@ function findSchedule(scheduleId) {
    REGISTRAR DOSE TOMADA
    ============================================================ */
 
+
+/* ============================================================
+   REGISTRAR DOSE TOMADA — COM CONFIRMAÇÃO
+   ============================================================ */
+
 async function markDoseTaken(scheduleId, time) {
   if (!currentUser) {
     showMessage("Entre na sua conta novamente.", true);
@@ -2316,6 +2321,16 @@ async function markDoseTaken(scheduleId, time) {
       "Horário de medicamento não encontrado.",
       true
     );
+    return;
+  }
+
+  // CONFIRMAÇÃO ANTES DE REGISTRAR A DOSE
+  const confirmar = window.confirm(
+    "💊 Confirma que tomou este medicamento?"
+  );
+
+  // Se clicar em Cancelar, não registra nada.
+  if (!confirmar) {
     return;
   }
 
@@ -2337,11 +2352,6 @@ async function markDoseTaken(scheduleId, time) {
   });
 
   try {
-    /*
-      A baixa do estoque é feita pela função RPC.
-      Não subtraia estoque diretamente neste arquivo.
-    */
-
     const { error } = await supabaseClient.rpc(
       "mark_dose_taken",
       {
@@ -2376,6 +2386,7 @@ async function markDoseTaken(scheduleId, time) {
     });
   }
 }
+
 
 /* ============================================================
    REGISTRAR DOSE NÃO TOMADA
