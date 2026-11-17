@@ -160,7 +160,6 @@ function periodEmoji(time) {
 
 function statusEmoji(status) {
   if (status === "taken") return "💎";
-  if (status === "not_taken") return "😟";
   if (status === "overdue") return "⚠️";
 
   return "⏳";
@@ -173,8 +172,10 @@ function statusEmoji(status) {
 function getDoseDisplayStatus(schedule) {
   const status = schedule.doseStatus || "pending";
 
-  if (status === "taken" || status === "not_taken") {
-    return status;
+  // Somente uma confirmação explícita de "Tomei" altera o status.
+  // Registros antigos "not_taken" passam a ser tratados como pendentes.
+  if (status === "taken") {
+    return "taken";
   }
 
   const time = cleanTime(schedule.scheduled_time);
@@ -1744,7 +1745,10 @@ async function loadMedications() {
           scheduledFor
         ).getTime()}`;
 
-        schedule.doseStatus = logMap.get(key) || "pending";
+        const recordedStatus = logMap.get(key);
+        // Somente "taken" é considerado confirmação. Logs antigos
+        // "not_taken" não escondem a dose nem alteram o estoque.
+        schedule.doseStatus = recordedStatus === "taken" ? "taken" : "pending";
       }
     }
 
@@ -2087,7 +2091,6 @@ function getTodayDoseItems() {
 function updateTodaySummary(items) {
   const counts = {
     taken: 0,
-    not_taken: 0,
     pending: 0,
     overdue: 0
   };
@@ -2118,11 +2121,6 @@ function updateTodaySummary(items) {
     <div class="summary-item summary-overdue">
       <strong>${counts.overdue}</strong>
       <span>Atrasadas</span>
-    </div>
-
-    <div class="summary-item summary-not-taken">
-      <strong>${counts.not_taken}</strong>
-      <span>Não tomadas</span>
     </div>
   `;
 }
@@ -2265,15 +2263,6 @@ async function renderTodayMedications() {
             ✓ Tomei
           </button>
 
-          <button
-            type="button"
-            class="today-not-taken"
-            data-action="skip-dose"
-            data-schedule-id="${escapeHTML(schedule.id)}"
-            data-time="${escapeHTML(item.time)}"
-          >
-            ✕ Não tomei
-          </button>
         </div>
       </article>
     `;
@@ -2340,7 +2329,7 @@ function showDoseConfirmation(message = "Confirma o registro de que tomou o medi
           Confirmar registro
         </h3>
         <p style="margin: 0 0 24px; font-size: 15px; line-height: 1.5;">
-          ${message}
+          ${escapeHTML(message)}
         </p>
         <div style="display: flex; gap: 12px;">
           <button type="button" id="doseConfirmationNo"
@@ -2459,73 +2448,6 @@ async function markDoseTaken(scheduleId, time) {
     });
   }
 }
-
-/* ============================================================
-   REGISTRAR DOSE NÃO TOMADA
-   ============================================================ */
-
-
-async function markDoseNotTaken(scheduleId, time) {
-  if (!currentUser) {
-    showMessage("Entre na sua conta novamente.", true);
-    return;
-  }
-
-  const schedule = findSchedule(scheduleId);
-
-  if (!schedule) {
-    showMessage("Horário de medicamento não encontrado.", true);
-    return;
-  }
-
-  const confirmado = await showDoseConfirmation(
-    "Confirma que NÃO tomou o medicamento?"
-  );
-
-  if (!confirmado) return;
-
-  const scheduledFor = localScheduleTimestamp(
-    todayLocalDate(),
-    time || schedule.scheduled_time
-  );
-
-  const card = document.querySelector(
-    `.today-medication-card[data-schedule-id="${CSS.escape(String(scheduleId))}"]`
-  );
-
-  const buttons = card?.querySelectorAll("button");
-  buttons?.forEach(button => {
-    button.disabled = true;
-  });
-
-  try {
-    const { error } = await supabaseClient.rpc("mark_dose_not_taken", {
-      p_schedule_id: scheduleId,
-      p_scheduled_for: scheduledFor
-    });
-
-    if (error) throw error;
-
-    await loadMedications();
-    await renderTodayMedications();
-    renderMedications();
-
-    showMessage("Dose registrada como não tomada!");
-
-  } catch (error) {
-    console.error("Erro ao registrar dose não tomada:", error);
-
-    showMessage(
-      error.message || "Não foi possível registrar a dose.",
-      true
-    );
-
-    buttons?.forEach(button => {
-      button.disabled = false;
-    });
-  }
-}
-
 
 /* ============================================================
    ALTERAR SITUAÇÃO DO MEDICAMENTO
@@ -2877,9 +2799,6 @@ function handleTodayMedicationClick(event) {
     markDoseTaken(scheduleId, time);
   }
 
-  if (action === "skip-dose") {
-    markDoseNotTaken(scheduleId, time);
-  }
 }
 
 /* ============================================================
