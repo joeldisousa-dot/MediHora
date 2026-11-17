@@ -2256,7 +2256,7 @@ async function renderTodayMedications() {
           <button
             type="button"
             class="today-taken"
-            style="background-color:#16a34a;color:#ffffff;border:1px solid #15803d;font-weight:700;"
+            style="background-color:#1e40af;color:#ffffff;border:1px solid #1e3a8a;font-weight:700;"
             data-action="take-dose"
             data-schedule-id="${escapeHTML(schedule.id)}"
             data-time="${escapeHTML(item.time)}"
