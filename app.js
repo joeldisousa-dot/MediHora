@@ -2302,10 +2302,131 @@ function findSchedule(scheduleId) {
 /* ============================================================
    REGISTRAR DOSE TOMADA
    ============================================================ */
+/* ============================================================
+   CONFIRMAÇÃO PERSONALIZADA — REGISTRO DA DOSE
+   ============================================================ */
 
+function showDoseConfirmation() {
+  return new Promise(resolve => {
+    // Remove uma confirmação anterior, se existir.
+    document.getElementById("doseConfirmationModal")?.remove();
+
+    const modal = document.createElement("div");
+
+    modal.id = "doseConfirmationModal";
+
+    modal.style.cssText = `
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.65);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 99999;
+      padding: 20px;
+    `;
+
+    modal.innerHTML = `
+      <div style="
+        background: #ffffff;
+        color: #222222;
+        width: 100%;
+        max-width: 380px;
+        padding: 28px 22px;
+        border-radius: 16px;
+        text-align: center;
+        box-shadow: 0 10px 35px rgba(0,0,0,0.25);
+      ">
+        <div style="font-size: 38px; margin-bottom: 14px;">
+          💊
+        </div>
+
+        <h3 style="
+          margin: 0 0 12px;
+          font-size: 19px;
+        ">
+          Confirmar registro
+        </h3>
+
+        <p style="
+          margin: 0 0 24px;
+          font-size: 15px;
+          line-height: 1.5;
+        ">
+          Confirma o registro de que tomou o medicamento?
+        </p>
+
+        <div style="
+          display: flex;
+          gap: 12px;
+        ">
+          <button
+            type="button"
+            id="doseConfirmationNo"
+            style="
+              flex: 1;
+              padding: 13px;
+              border: none;
+              border-radius: 9px;
+              background: #e5e7eb;
+              color: #333333;
+              font-size: 16px;
+              font-weight: bold;
+              cursor: pointer;
+            "
+          >
+            Não
+          </button>
+
+          <button
+            type="button"
+            id="doseConfirmationYes"
+            style="
+              flex: 1;
+              padding: 13px;
+              border: none;
+              border-radius: 9px;
+              background: #16a34a;
+              color: white;
+              font-size: 16px;
+              font-weight: bold;
+              cursor: pointer;
+            "
+          >
+            Sim
+          </button>
+        </div>
+      </div>
+    `;
+
+    document.body.appendChild(modal);
+
+    function finish(result) {
+      modal.remove();
+      resolve(result);
+    }
+
+    modal.querySelector("#doseConfirmationYes")
+      .addEventListener("click", () => finish(true));
+
+    modal.querySelector("#doseConfirmationNo")
+      .addEventListener("click", () => finish(false));
+
+    // Permite fechar clicando fora da caixa.
+    modal.addEventListener("click", event => {
+      if (event.target === modal) {
+        finish(false);
+      }
+    });
+  });
+}
 
 /* ============================================================
    REGISTRAR DOSE TOMADA — COM CONFIRMAÇÃO
+   ============================================================ */
+
+/* ============================================================
+   REGISTRAR DOSE TOMADA — COM CONFIRMAÇÃO SIM/NÃO
    ============================================================ */
 
 async function markDoseTaken(scheduleId, time) {
@@ -2324,13 +2445,11 @@ async function markDoseTaken(scheduleId, time) {
     return;
   }
 
-  // CONFIRMAÇÃO ANTES DE REGISTRAR A DOSE
-  const confirmar = window.confirm(
-    "💊 Confirma que tomou este medicamento?"
-  );
+  // Exibe a confirmação personalizada.
+  const confirmado = await showDoseConfirmation();
 
-  // Se clicar em Cancelar, não registra nada.
-  if (!confirmar) {
+  // Se clicar em Não, não registra absolutamente nada.
+  if (!confirmado) {
     return;
   }
 
@@ -2365,6 +2484,7 @@ async function markDoseTaken(scheduleId, time) {
     await loadMedications();
 
     await renderTodayMedications();
+
     renderMedications();
 
     showMessage("Dose registrada como tomada!");
@@ -2386,7 +2506,6 @@ async function markDoseTaken(scheduleId, time) {
     });
   }
 }
-
 
 /* ============================================================
    REGISTRAR DOSE NÃO TOMADA
