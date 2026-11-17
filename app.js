@@ -2306,15 +2306,13 @@ function findSchedule(scheduleId) {
    CONFIRMAÇÃO PERSONALIZADA — REGISTRO DA DOSE
    ============================================================ */
 
-function showDoseConfirmation() {
+
+function showDoseConfirmation(message = "Confirma o registro de que tomou o medicamento?") {
   return new Promise(resolve => {
-    // Remove uma confirmação anterior, se existir.
     document.getElementById("doseConfirmationModal")?.remove();
 
     const modal = document.createElement("div");
-
     modal.id = "doseConfirmationModal";
-
     modal.style.cssText = `
       position: fixed;
       inset: 0;
@@ -2337,64 +2335,22 @@ function showDoseConfirmation() {
         text-align: center;
         box-shadow: 0 10px 35px rgba(0,0,0,0.25);
       ">
-        <div style="font-size: 38px; margin-bottom: 14px;">
-          💊
-        </div>
-
-        <h3 style="
-          margin: 0 0 12px;
-          font-size: 19px;
-        ">
+        <div style="font-size: 38px; margin-bottom: 14px;">💊</div>
+        <h3 style="margin: 0 0 12px; font-size: 19px;">
           Confirmar registro
         </h3>
-
-        <p style="
-          margin: 0 0 24px;
-          font-size: 15px;
-          line-height: 1.5;
-        ">
-          Confirma o registro de que tomou o medicamento?
+        <p style="margin: 0 0 24px; font-size: 15px; line-height: 1.5;">
+          ${message}
         </p>
-
-        <div style="
-          display: flex;
-          gap: 12px;
-        ">
-          <button
-            type="button"
-            id="doseConfirmationNo"
-            style="
-              flex: 1;
-              padding: 13px;
-              border: none;
-              border-radius: 9px;
-              background: #e5e7eb;
-              color: #333333;
-              font-size: 16px;
-              font-weight: bold;
-              cursor: pointer;
-            "
-          >
-            Não
-          </button>
-
-          <button
-            type="button"
-            id="doseConfirmationYes"
-            style="
-              flex: 1;
-              padding: 13px;
-              border: none;
-              border-radius: 9px;
-              background: #16a34a;
-              color: white;
-              font-size: 16px;
-              font-weight: bold;
-              cursor: pointer;
-            "
-          >
-            Sim
-          </button>
+        <div style="display: flex; gap: 12px;">
+          <button type="button" id="doseConfirmationNo"
+            style="flex:1; padding:13px; border:none; border-radius:9px;
+            background:#e5e7eb; color:#333; font-size:16px;
+            font-weight:bold; cursor:pointer;">Não</button>
+          <button type="button" id="doseConfirmationYes"
+            style="flex:1; padding:13px; border:none; border-radius:9px;
+            background:#16a34a; color:white; font-size:16px;
+            font-weight:bold; cursor:pointer;">Sim</button>
         </div>
       </div>
     `;
@@ -2412,11 +2368,8 @@ function showDoseConfirmation() {
     modal.querySelector("#doseConfirmationNo")
       .addEventListener("click", () => finish(false));
 
-    // Permite fechar clicando fora da caixa.
     modal.addEventListener("click", event => {
-      if (event.target === modal) {
-        finish(false);
-      }
+      if (event.target === modal) finish(false);
     });
   });
 }
@@ -2511,6 +2464,7 @@ async function markDoseTaken(scheduleId, time) {
    REGISTRAR DOSE NÃO TOMADA
    ============================================================ */
 
+
 async function markDoseNotTaken(scheduleId, time) {
   if (!currentUser) {
     showMessage("Entre na sua conta novamente.", true);
@@ -2520,12 +2474,15 @@ async function markDoseNotTaken(scheduleId, time) {
   const schedule = findSchedule(scheduleId);
 
   if (!schedule) {
-    showMessage(
-      "Horário de medicamento não encontrado.",
-      true
-    );
+    showMessage("Horário de medicamento não encontrado.", true);
     return;
   }
+
+  const confirmado = await showDoseConfirmation(
+    "Confirma que NÃO tomou o medicamento?"
+  );
+
+  if (!confirmado) return;
 
   const scheduledFor = localScheduleTimestamp(
     todayLocalDate(),
@@ -2533,44 +2490,33 @@ async function markDoseNotTaken(scheduleId, time) {
   );
 
   const card = document.querySelector(
-    `.today-medication-card[data-schedule-id="${CSS.escape(
-      String(scheduleId)
-    )}"]`
+    `.today-medication-card[data-schedule-id="${CSS.escape(String(scheduleId))}"]`
   );
 
   const buttons = card?.querySelectorAll("button");
-
   buttons?.forEach(button => {
     button.disabled = true;
   });
 
   try {
-    const { error } = await supabaseClient.rpc(
-      "mark_dose_not_taken",
-      {
-        p_schedule_id: scheduleId,
-        p_scheduled_for: scheduledFor
-      }
-    );
+    const { error } = await supabaseClient.rpc("mark_dose_not_taken", {
+      p_schedule_id: scheduleId,
+      p_scheduled_for: scheduledFor
+    });
 
     if (error) throw error;
 
     await loadMedications();
-
     await renderTodayMedications();
     renderMedications();
 
-    showMessage("Dose registrada como não tomada.");
+    showMessage("Dose registrada como não tomada!");
 
   } catch (error) {
-    console.error(
-      "Erro ao registrar dose não tomada:",
-      error
-    );
+    console.error("Erro ao registrar dose não tomada:", error);
 
     showMessage(
-      error.message ||
-        "Não foi possível registrar a dose.",
+      error.message || "Não foi possível registrar a dose.",
       true
     );
 
@@ -2579,6 +2525,7 @@ async function markDoseNotTaken(scheduleId, time) {
     });
   }
 }
+
 
 /* ============================================================
    ALTERAR SITUAÇÃO DO MEDICAMENTO
