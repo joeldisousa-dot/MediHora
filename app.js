@@ -1080,6 +1080,7 @@ async function logout() {
     currentUser = null;
     medications = [];
     schedulesByMedication = {};
+    updateStockLegend();
 
     applicationUserId = null;
 
@@ -1752,6 +1753,8 @@ async function loadMedications() {
       }
     }
 
+    updateStockLegend();
+
     return medications;
 
   } catch (error) {
@@ -1889,6 +1892,60 @@ function stockMessage(medication) {
     `${escapeHTML(medication.stock_unit || "")} disponíveis · ` +
     `aproximadamente ${formatQuantity(info.estimatedDays)} dias`
   );
+}
+
+
+/* ============================================================
+   PAINEL FIXO — ESTOQUE ATUAL DE TODOS OS MEDICAMENTOS
+   ============================================================ */
+
+function updateStockLegend() {
+  const container = $("stockLegendItems");
+  const updatedLabel = $("stockLegendUpdated");
+
+  if (!container) return;
+
+  if (!currentUser) {
+    container.innerHTML =
+      '<span class="stock-legend-empty">Entre na sua conta para consultar os estoques.</span>';
+    if (updatedLabel) updatedLabel.textContent = "";
+    return;
+  }
+
+  if (!medications.length) {
+    container.innerHTML =
+      '<span class="stock-legend-empty">Nenhum medicamento cadastrado.</span>';
+  } else {
+    container.innerHTML = medications.map(medication => {
+      const info = getStockInformation(medication);
+      const levelClass = info.level === "empty"
+        ? "empty"
+        : info.level === "low"
+          ? "low"
+          : "normal";
+
+      const unit = medication.stock_unit
+        ? ` ${escapeHTML(medication.stock_unit)}`
+        : "";
+
+      return `
+        <span class="stock-legend-item ${levelClass}">
+          <span class="stock-legend-item-name">${escapeHTML(medication.name)}</span>
+          <strong>${formatQuantity(info.stock)}${unit}</strong>
+        </span>
+      `;
+    }).join("");
+  }
+
+  if (updatedLabel) {
+    const time = new Intl.DateTimeFormat("pt-BR", {
+      timeZone: APP_TIMEZONE,
+      hour: "2-digit",
+      minute: "2-digit"
+    }).format(new Date());
+
+    updatedLabel.textContent = `Última atualização: ${time}`;
+  }
 }
 
 /* ============================================================
@@ -2535,6 +2592,8 @@ async function updateMedicationStatus(medicationId, newStatus) {
    ============================================================ */
 
 function renderMedications() {
+  updateStockLegend();
+
   const container = $("medicationList");
 
   if (!container) return;
