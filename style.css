@@ -847,6 +847,15 @@ textarea::placeholder {
   font-weight: 900;
 }
 
+.stock-quantity {
+  font-weight: 800;
+}
+
+.stock-quantity-low {
+  color: #c62828 !important;
+  font-weight: 900;
+}
+
 /* ============================================================
    AVISO E RODAPÉ
    ============================================================ */
@@ -1153,13 +1162,13 @@ textarea:focus-visible {
   white-space: nowrap;
 }
 
-.stock-legend-item.low {
-  border-color: #f1d9a9;
-  background: #fff8e9;
+.stock-legend-item.critical {
+  border-color: #f2aeb5;
+  background: #fff0f1;
 }
 
-.stock-legend-item.low strong {
-  color: var(--warning);
+.stock-legend-item.critical strong {
+  color: #c62828;
 }
 
 .stock-legend-item.empty {
