@@ -1014,3 +1014,238 @@ textarea:focus-visible {
     scroll-behavior: auto !important;
   }
 }
+
+
+/* ============================================================
+   MELHORIAS: LEMBRETES NO CABEÇALHO E ESTOQUE FIXO
+   ============================================================ */
+
+.welcome {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+}
+
+.welcome-copy {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.notification-control {
+  flex: 0 0 auto;
+  min-height: 35px;
+  max-width: 205px;
+  margin: 0 !important;
+  padding: 7px 11px;
+  border-radius: 10px;
+  font-size: 12px;
+  line-height: 1.25;
+  white-space: normal;
+  box-shadow: none;
+}
+
+.notification-control.notifications-enabled {
+  border-color: #b9e3ca;
+  background: #e8f7ef;
+  color: #126b49;
+}
+
+/* Painel permanece visível durante a navegação na área pessoal. */
+.stock-legend {
+  position: fixed;
+  z-index: 900;
+  left: 50%;
+  bottom: 12px;
+  transform: translateX(-50%);
+  width: min(1060px, calc(100% - 28px));
+  max-height: 190px;
+  overflow-y: auto;
+  padding: 12px 15px;
+  border: 1px solid #cfe4d6;
+  border-radius: 15px;
+  background: rgba(255, 255, 255, 0.97);
+  box-shadow: 0 8px 28px rgba(24, 75, 48, 0.17);
+  backdrop-filter: blur(10px);
+}
+
+.stock-legend-header {
+  position: sticky;
+  top: -12px;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin: -12px -15px 10px;
+  padding: 10px 15px 8px;
+  border-bottom: 1px solid #e5eee8;
+  background: rgba(255, 255, 255, 0.98);
+}
+
+.stock-legend-title {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-width: 0;
+}
+
+.stock-legend-icon {
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  flex: 0 0 34px;
+  border-radius: 10px;
+  background: var(--primary-light);
+  font-size: 18px;
+}
+
+.stock-legend-title strong {
+  display: block;
+  color: var(--primary-dark);
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.stock-legend-title small {
+  display: block;
+  color: var(--muted);
+  font-size: 10px;
+}
+
+.stock-legend-live {
+  color: var(--success);
+  font-size: 10px;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.stock-legend-items {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
+.stock-legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 100%;
+  padding: 6px 10px;
+  border: 1px solid #dcebe1;
+  border-radius: 9px;
+  background: #f5fbf7;
+  color: var(--text);
+  font-size: 12px;
+  line-height: 1.3;
+}
+
+.stock-legend-item-name {
+  overflow-wrap: anywhere;
+  font-weight: 800;
+}
+
+.stock-legend-item strong {
+  color: var(--success);
+  font-size: 13px;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.stock-legend-item.low {
+  border-color: #f1d9a9;
+  background: #fff8e9;
+}
+
+.stock-legend-item.low strong {
+  color: var(--warning);
+}
+
+.stock-legend-item.empty {
+  border-color: #f2c7cc;
+  background: var(--danger-bg);
+}
+
+.stock-legend-item.empty strong {
+  color: var(--danger);
+}
+
+.stock-legend-empty {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+#appSection {
+  padding-bottom: 175px;
+}
+
+@media (max-width: 700px) {
+  .welcome {
+    align-items: flex-start;
+    gap: 8px;
+    padding: 18px 15px;
+  }
+
+  .welcome h1 {
+    font-size: 22px;
+  }
+
+  .welcome-copy .muted {
+    font-size: 13px;
+  }
+
+  .notification-control {
+    max-width: 142px;
+    min-height: 33px;
+    padding: 6px 8px;
+    font-size: 10px;
+  }
+
+  .stock-legend {
+    bottom: 8px;
+    width: calc(100% - 16px);
+    max-height: 155px;
+    padding: 10px 11px;
+    border-radius: 13px;
+  }
+
+  .stock-legend-header {
+    top: -10px;
+    margin: -10px -11px 8px;
+    padding: 8px 11px 7px;
+  }
+
+  .stock-legend-item {
+    padding: 5px 8px;
+    font-size: 11px;
+  }
+
+  .stock-legend-item strong {
+    font-size: 12px;
+  }
+
+  #appSection {
+    padding-bottom: 150px;
+  }
+}
+
+@media (max-width: 380px) {
+  .welcome {
+    gap: 5px;
+    padding: 16px 12px;
+  }
+
+  .welcome h1 {
+    font-size: 19px;
+  }
+
+  .notification-control {
+    max-width: 126px;
+    font-size: 9px;
+  }
+
+  .stock-legend-live {
+    font-size: 9px;
+  }
+}
