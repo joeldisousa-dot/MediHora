@@ -1918,11 +1918,8 @@ function updateStockLegend() {
   } else {
     container.innerHTML = medications.map(medication => {
       const info = getStockInformation(medication);
-      const levelClass = info.level === "empty"
-        ? "empty"
-        : info.level === "low"
-          ? "low"
-          : "normal";
+      // Estoque abaixo de 10 unidades recebe destaque vermelho.
+      const levelClass = info.stock < 10 ? "critical" : "normal";
 
       const unit = medication.stock_unit
         ? ` ${escapeHTML(medication.stock_unit)}`
@@ -2676,8 +2673,10 @@ function renderMedications() {
 
           <p>
             <strong>Estoque:</strong>
-            ${formatQuantity(stock.stock)}
-            ${escapeHTML(medication.stock_unit || "")}
+            <span class="stock-quantity ${Number(stock.stock) < 10 ? "stock-quantity-low" : ""}">
+              ${formatQuantity(stock.stock)}
+              ${escapeHTML(medication.stock_unit || "")}
+            </span>
           </p>
 
           <p>
