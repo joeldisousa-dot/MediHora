@@ -277,7 +277,7 @@
 
       <section class="welcome">
 
-        <div>
+        <div class="welcome-copy">
 
           <p class="eyebrow">ÁREA PESSOAL</p>
 
@@ -289,16 +289,39 @@
             Acompanhe seus medicamentos de hoje.
           </p>
 
-          <button
-            id="enableNotificationsButton"
-            class="button button-secondary"
-            type="button"
-          >
-            🔔 Ativar lembretes no celular
-          </button>
-
         </div>
 
+        <button
+          id="enableNotificationsButton"
+          class="button button-secondary notification-control"
+          type="button"
+        >
+          🔔 Ativar lembretes no celular
+        </button>
+
+      </section>
+
+      <!-- PAINEL FIXO DE ESTOQUE -->
+      <section
+        id="stockLegend"
+        class="stock-legend"
+        aria-label="Estoque atual dos medicamentos"
+        aria-live="polite"
+      >
+        <div class="stock-legend-header">
+          <div class="stock-legend-title">
+            <span class="stock-legend-icon">📦</span>
+            <div>
+              <strong>Estoque atualizado</strong>
+              <small id="stockLegendUpdated">Aguardando dados...</small>
+            </div>
+          </div>
+          <span class="stock-legend-live">● Atualizado</span>
+        </div>
+
+        <div id="stockLegendItems" class="stock-legend-items">
+          <span class="stock-legend-empty">Carregando estoques...</span>
+        </div>
       </section>
 
       <!-- ACOMPANHAMENTO DIÁRIO -->
