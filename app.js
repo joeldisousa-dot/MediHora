@@ -1925,10 +1925,58 @@ function updateStockLegend() {
         ? ` ${escapeHTML(medication.stock_unit)}`
         : "";
 
+/* ============================================================
+   PAINEL FIXO — RESUMO SOMENTE DOS MEDICAMENTOS COM ESTOQUE
+   ============================================================ */
+
+function updateStockLegend() {
+  const container = $("stockLegendItems");
+  const updatedLabel = $("stockLegendUpdated");
+
+  if (!container) return;
+
+  if (!currentUser) {
+    container.innerHTML = `
+      <span class="stock-legend-empty">
+        Entre na sua conta para consultar os estoques.
+      </span>
+    `;
+
+    if (updatedLabel) updatedLabel.textContent = "";
+    return;
+  }
+
+  // Considera somente medicamentos com estoque maior que zero.
+  const availableMedications = medications.filter(medication => {
+    return Number(medication.stock_quantity ?? 0) > 0;
+  });
+
+  if (availableMedications.length === 0) {
+    container.innerHTML = `
+      <span class="stock-legend-empty">
+        Nenhum medicamento com estoque disponível.
+      </span>
+    `;
+  } else {
+    container.innerHTML = availableMedications.map(medication => {
+      const info = getStockInformation(medication);
+
+      // Estoque abaixo de 10 unidades recebe destaque vermelho.
+      const levelClass = info.stock < 10 ? "critical" : "normal";
+
+      const unit = medication.stock_unit
+        ? ` ${escapeHTML(medication.stock_unit)}`
+        : "";
+
       return `
         <span class="stock-legend-item ${levelClass}">
-          <span class="stock-legend-item-name">${escapeHTML(medication.name)}</span>
-          <strong>${formatQuantity(info.stock)}${unit}</strong>
+          <span class="stock-legend-item-name">
+            ${escapeHTML(medication.name)}
+          </span>
+
+          <strong>
+            ${formatQuantity(info.stock)}${unit}
+          </strong>
         </span>
       `;
     }).join("");
@@ -1944,6 +1992,7 @@ function updateStockLegend() {
     updatedLabel.textContent = `Última atualização: ${time}`;
   }
 }
+
 
 /* ============================================================
    ABRIR FORMULÁRIO DE REPOSIÇÃO
