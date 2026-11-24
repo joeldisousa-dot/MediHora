@@ -1896,36 +1896,6 @@ function stockMessage(medication) {
 
 
 /* ============================================================
-   PAINEL FIXO — ESTOQUE ATUAL DE TODOS OS MEDICAMENTOS
-   ============================================================ */
-
-function updateStockLegend() {
-  const container = $("stockLegendItems");
-  const updatedLabel = $("stockLegendUpdated");
-
-  if (!container) return;
-
-  if (!currentUser) {
-    container.innerHTML =
-      '<span class="stock-legend-empty">Entre na sua conta para consultar os estoques.</span>';
-    if (updatedLabel) updatedLabel.textContent = "";
-    return;
-  }
-
-  if (!medications.length) {
-    container.innerHTML =
-      '<span class="stock-legend-empty">Nenhum medicamento cadastrado.</span>';
-  } else {
-    container.innerHTML = medications.map(medication => {
-      const info = getStockInformation(medication);
-      // Estoque abaixo de 10 unidades recebe destaque vermelho.
-      const levelClass = info.stock < 10 ? "critical" : "normal";
-
-      const unit = medication.stock_unit
-        ? ` ${escapeHTML(medication.stock_unit)}`
-        : "";
-
-/* ============================================================
    PAINEL FIXO — RESUMO SOMENTE DOS MEDICAMENTOS COM ESTOQUE
    ============================================================ */
 
@@ -1946,10 +1916,10 @@ function updateStockLegend() {
     return;
   }
 
-  // Considera somente medicamentos com estoque maior que zero.
-  const availableMedications = medications.filter(medication => {
-    return Number(medication.stock_quantity ?? 0) > 0;
-  });
+  // Exibe somente medicamentos com estoque maior que zero.
+  const availableMedications = medications.filter(medication =>
+    Number(medication.stock_quantity ?? 0) > 0
+  );
 
   if (availableMedications.length === 0) {
     container.innerHTML = `
@@ -1961,8 +1931,9 @@ function updateStockLegend() {
     container.innerHTML = availableMedications.map(medication => {
       const info = getStockInformation(medication);
 
-      // Estoque abaixo de 10 unidades recebe destaque vermelho.
-      const levelClass = info.stock < 10 ? "critical" : "normal";
+      const levelClass = info.stock < 10
+        ? "critical"
+        : "normal";
 
       const unit = medication.stock_unit
         ? ` ${escapeHTML(medication.stock_unit)}`
